@@ -1,5 +1,6 @@
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import type { SourceIndex } from "../src/collect/sources.js";
@@ -137,7 +138,9 @@ export default async function setup(context: {
   // Any materialized project will do; with none, the test over it skips rather than fails.
   const project = FIXTURES.find(fixtureAvailable);
   const onProject = project ? start(cli, project.path) : undefined;
-  const withoutProject = start(cli, "/");
+  // An empty directory, not `/`: below `/` a machine can hold apps, this checkout's among them, and
+  // they turn "no project" into "apps below it".
+  const withoutProject = start(cli, mkdtempSync(join(tmpdir(), "next-coverage-empty-")));
   const scans = scanFixtures();
   context.provide("fixtureSources", scans);
   context.provide("fixtureAnalyses", analyseFixtures(scans));

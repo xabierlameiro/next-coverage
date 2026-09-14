@@ -194,6 +194,10 @@ describe("a build that cannot answer", () => {
     const appDirectory = join(root, "app");
     mkdirSync(appDirectory, { recursive: true });
     writeBuild(root, manifest({}));
+    // Set in the past rather than raced: on a filesystem whose clock is coarse, a file written right
+    // after the build can share its timestamp, and would not read as newer.
+    const built = new Date(Date.now() - 30_000);
+    utimesSync(join(root, ".next", "BUILD_ID"), built, built);
     // Written after the build, so every claim about it is a claim about older code.
     for (const [relativePath, contents] of Object.entries(SLOTS)) {
       const full = join(root, relativePath);

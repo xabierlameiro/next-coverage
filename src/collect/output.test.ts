@@ -63,6 +63,10 @@ function snapshotProject(version: SnapshotVersion, extra: Record<string, string>
   const { root, appDirectory } = project(files);
   backdate(root, Object.keys(files));
   writeSnapshotBuild(root, version);
+  // Between the sources and anything a test writes next. On a filesystem whose clock is coarse, a
+  // file written right after the build can share its timestamp, and would not read as newer.
+  const built = new Date(Date.now() - 30_000);
+  utimesSync(join(root, ".next", "BUILD_ID"), built, built);
   return { root, appDirectory };
 }
 

@@ -15,6 +15,10 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
+    # TypeScript 7 ships no compiler API from its main entry, and the analysis parses with that API.
+    ignore:
+      - dependency-name: typescript
+        versions: [">=7"]
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /

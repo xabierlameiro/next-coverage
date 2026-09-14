@@ -47,7 +47,7 @@ jobs:
         run: pnpm test
 
       - name: Cache the pinned projects' sources
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .fixtures/.repos
           key: pinned-repos-${{ hashFiles('test-support/pinned-projects.json') }}

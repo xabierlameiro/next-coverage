@@ -1,0 +1,160 @@
+next 16.2.7, preset default
+constraints checked 13, contradicted 0
+
+used components/font (1)
+not-evaluated components/form
+used components/image (7)
+  also would apply
+    src/app/(home)/sections/HeroSection.tsx
+    src/app/(home)/sections/ScreenshotSection.tsx
+used components/link (2)
+used components/script (1)
+not-evaluated config/eslint
+not-evaluated config/next-config-js/adapterPath
+not-evaluated config/next-config-js/allowedDevOrigins
+not-applicable config/next-config-js/appDir
+not-evaluated config/next-config-js/assetPrefix
+not-evaluated config/next-config-js/authInterrupts
+not-evaluated config/next-config-js/basePath
+not-evaluated config/next-config-js/cacheComponents
+not-evaluated config/next-config-js/cacheHandlers
+not-evaluated config/next-config-js/cacheLife
+not-evaluated config/next-config-js/compress
+not-evaluated config/next-config-js/crossOrigin
+not-evaluated config/next-config-js/cssChunking
+not-evaluated config/next-config-js/deploymentId
+not-evaluated config/next-config-js/devIndicators
+not-evaluated config/next-config-js/distDir
+not-applicable config/next-config-js/env
+not-evaluated config/next-config-js/expireTime
+not-applicable config/next-config-js/exportPathMap
+not-evaluated config/next-config-js/generateBuildId
+not-evaluated config/next-config-js/generateEtags
+not-evaluated config/next-config-js/headers
+not-evaluated config/next-config-js/htmlLimitedBots
+not-evaluated config/next-config-js/httpAgentOptions
+not-evaluated config/next-config-js/images
+not-evaluated config/next-config-js/incrementalCacheHandlerPath
+not-evaluated config/next-config-js/inlineCss
+not-evaluated config/next-config-js/logging
+not-evaluated config/next-config-js/mdxRs
+not-evaluated config/next-config-js/onDemandEntries
+not-evaluated config/next-config-js/optimizePackageImports
+not-evaluated config/next-config-js/output
+not-evaluated config/next-config-js/pageExtensions
+not-evaluated config/next-config-js/poweredByHeader
+not-evaluated config/next-config-js/productionBrowserSourceMaps
+not-evaluated config/next-config-js/proxyClientMaxBodySize
+would-apply config/next-config-js/reactCompiler
+  src/components/ai/page-actions.tsx
+  src/styled-system/jsx/factory.mjs
+not-evaluated config/next-config-js/reactMaxHeadersLength
+used config/next-config-js/reactStrictMode (1)
+used config/next-config-js/redirects (1)
+used config/next-config-js/rewrites (1)
+not-evaluated config/next-config-js/sassOptions
+not-evaluated config/next-config-js/serverActions
+not-evaluated config/next-config-js/serverComponentsHmrCache
+not-evaluated config/next-config-js/serverExternalPackages
+not-evaluated config/next-config-js/staleTimes
+not-evaluated config/next-config-js/staticGeneration
+not-evaluated config/next-config-js/taint
+not-evaluated config/next-config-js/trailingSlash
+not-evaluated config/next-config-js/transpilePackages
+not-evaluated config/next-config-js/turbopack
+not-evaluated config/next-config-js/turbopackFileSystemCache
+not-evaluated config/next-config-js/turbopackIgnoreIssue
+not-evaluated config/next-config-js/turbopackLocalPostcssConfig
+would-apply config/next-config-js/typedRoutes
+  src/app/(home)/sections/HeroSection.tsx
+  src/app/(home)/sections/MilspecSection.tsx
+not-evaluated config/next-config-js/typescript
+not-evaluated config/next-config-js/urlImports
+not-evaluated config/next-config-js/useLightningcss
+not-evaluated config/next-config-js/viewTransition
+not-evaluated config/next-config-js/webVitalsAttribution
+not-evaluated config/next-config-js/webpack
+used config/typescript (1)
+not-evaluated directives/use-cache
+not-evaluated directives/use-cache-private
+not-evaluated directives/use-cache-remote
+used directives/use-client (7)
+not-evaluated directives/use-server
+not-evaluated file-conventions/default
+used file-conventions/dynamic-routes (5)
+not-evaluated file-conventions/error
+not-evaluated file-conventions/forbidden
+not-evaluated file-conventions/instrumentation
+not-evaluated file-conventions/instrumentation-client
+not-evaluated file-conventions/intercepting-routes
+used file-conventions/layout (4)
+would-apply file-conventions/loading
+  src/app/(home)/blog/[...slug]/page.tsx
+  src/app/(home)/docs/page.tsx
+  src/app/(home)/page.tsx
+  src/app/docs/[...slug]/page.tsx
+used file-conventions/mdx-components (1)
+not-evaluated file-conventions/metadata/app-icons
+not-evaluated file-conventions/metadata/manifest
+not-evaluated file-conventions/metadata/opengraph-image
+used file-conventions/metadata/robots (1)
+used file-conventions/metadata/sitemap (1)
+would-apply file-conventions/not-found
+  src/app/(home)/blog/[...slug]/page.tsx
+  src/app/blog-og/[...slug]/route.tsx
+  src/app/docs-og/[...slug]/route.tsx
+  src/app/docs/[...slug]/page.tsx
+  src/app/llms.mdx/docs/[[...slug]]/route.ts
+used file-conventions/page (5)
+not-evaluated file-conventions/parallel-routes
+used file-conventions/proxy (1)
+used file-conventions/public-folder (1)
+used file-conventions/route (7)
+used file-conventions/route-groups (1)
+not-evaluated file-conventions/route-segment-config/dynamicParams
+not-evaluated file-conventions/route-segment-config/instant
+not-evaluated file-conventions/route-segment-config/maxDuration
+not-evaluated file-conventions/route-segment-config/preferredRegion
+not-evaluated file-conventions/route-segment-config/runtime
+used file-conventions/src-folder (1)
+not-evaluated file-conventions/template
+not-evaluated file-conventions/unauthorized
+not-evaluated functions/after
+not-evaluated functions/cacheLife
+not-evaluated functions/cacheTag
+not-evaluated functions/catchError
+not-evaluated functions/connection
+not-evaluated functions/cookies
+not-evaluated functions/draft-mode
+would-apply functions/fetch
+  src/app/(home)/page.tsx
+not-evaluated functions/forbidden
+not-evaluated functions/generate-image-metadata
+used functions/generate-metadata (2)
+not-evaluated functions/generate-sitemaps
+used functions/generate-static-params (5)
+not-evaluated functions/generate-viewport
+not-evaluated functions/headers
+used functions/image-response (2)
+used functions/next-request (1)
+used functions/next-response (1)
+used functions/not-found (5)
+not-evaluated functions/permanentRedirect
+used functions/redirect (1)
+not-evaluated functions/refresh
+not-evaluated functions/revalidatePath
+not-evaluated functions/revalidateTag
+not-evaluated functions/unauthorized
+not-evaluated functions/unstable_cache
+not-applicable functions/unstable_noStore
+not-evaluated functions/unstable_rethrow
+not-evaluated functions/updateTag
+not-evaluated functions/use-link-status
+not-evaluated functions/use-params
+not-evaluated functions/use-pathname
+not-evaluated functions/use-report-web-vitals
+not-evaluated functions/use-router
+not-evaluated functions/use-search-params
+not-evaluated functions/use-selected-layout-segment
+not-evaluated functions/use-selected-layout-segments
+not-evaluated functions/userAgent

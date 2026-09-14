@@ -1,0 +1,56 @@
+[
+  {
+    "route": "/[lang]/dashboard",
+    "firstLoadUncompressedJsBytes": 1918335,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  },
+  {
+    "route": "/[lang]/dashboard/settings/brand",
+    "firstLoadUncompressedJsBytes": 1890302,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  },
+  {
+    "route": "/[lang]/dashboard/demo",
+    "firstLoadUncompressedJsBytes": 1886047,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  },
+  {
+    "route": "/[lang]/admin/questions/[id]",
+    "firstLoadUncompressedJsBytes": 1858073,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  },
+  {
+    "route": "/[lang]/admin/questions",
+    "firstLoadUncompressedJsBytes": 1848029,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  },
+  {
+    "route": "/[lang]/dashboard/checkout/payment",
+    "firstLoadUncompressedJsBytes": 1843079,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/1aszersbedu10.js",
+      ".next/static/chunks/0glqr-p-mfyc7.js",
+      ".next/static/chunks/1c6cvxk76e6vq.js"
+    ]
+  }
+]

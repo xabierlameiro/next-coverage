@@ -1,0 +1,45 @@
+[
+  {
+    "name": "openmonetis",
+    "source": "felipegcoutinho/openmonetis",
+    "commit": "bf4138db82df4e86e01f988b6d662a0feb8f676b",
+    "next": "16.3.0",
+    "role": "suggestion coverage"
+  },
+  {
+    "name": "rustfs-console",
+    "source": "rustfs/console",
+    "commit": "1f530255139e6c38da24d6fb2d1bd6a7d37792fa",
+    "next": "16.3.0",
+    "role": "client-rendered routes"
+  },
+  {
+    "name": "odd-jobs-by-timonwa",
+    "source": "Timonwa/odd-jobs-by-timonwa",
+    "commit": "294049bdeefedddedad23cc5dddb208954e4ab85",
+    "next": "16.3.3",
+    "role": "static and dynamic routes"
+  },
+  {
+    "name": "next16-commerce",
+    "source": "aurorascharff/next16-commerce",
+    "commit": "13d17c0f21ee742cec914078480d4a008c51f782",
+    "next": "16.3.0-preview.10",
+    "role": "cache components"
+  },
+  {
+    "name": "storyden-home",
+    "source": "Southclaws/storyden",
+    "commit": "aa5761caed42ac4d64436f68904eab72da98782b",
+    "app": "home",
+    "next": "16.2.7",
+    "role": "version drift"
+  },
+  {
+    "name": "manuel-dugue",
+    "source": "mdugue/manuel-dugue",
+    "commit": "d64a16e6b5c5bebbddb65b0496e577a02035baee",
+    "next": "16.3.1",
+    "role": "parallel and intercepting routes"
+  }
+]

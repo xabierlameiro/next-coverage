@@ -1,0 +1,173 @@
+next 16.3.0-preview.10, preset default
+constraints checked 13, contradicted 0
+
+used components/font (1)
+used components/form (1)
+not-evaluated components/image
+used components/link (18)
+not-evaluated components/script
+used config/eslint (1)
+not-evaluated config/next-config-js/adapterPath
+not-evaluated config/next-config-js/allowedDevOrigins
+not-applicable config/next-config-js/appDir
+not-evaluated config/next-config-js/assetPrefix
+not-evaluated config/next-config-js/authInterrupts
+not-evaluated config/next-config-js/basePath
+used config/next-config-js/cacheComponents (1)
+not-evaluated config/next-config-js/cacheHandlers
+not-evaluated config/next-config-js/cacheLife
+not-evaluated config/next-config-js/compress
+not-evaluated config/next-config-js/crossOrigin
+not-evaluated config/next-config-js/cssChunking
+not-evaluated config/next-config-js/deploymentId
+not-evaluated config/next-config-js/devIndicators
+not-evaluated config/next-config-js/distDir
+not-applicable config/next-config-js/env
+not-evaluated config/next-config-js/expireTime
+not-applicable config/next-config-js/exportPathMap
+not-evaluated config/next-config-js/generateBuildId
+not-evaluated config/next-config-js/generateEtags
+not-evaluated config/next-config-js/headers
+not-evaluated config/next-config-js/htmlLimitedBots
+not-evaluated config/next-config-js/httpAgentOptions
+not-evaluated config/next-config-js/images
+not-evaluated config/next-config-js/incrementalCacheHandlerPath
+used config/next-config-js/inlineCss (1)
+not-evaluated config/next-config-js/instrumentationClientInject
+not-evaluated config/next-config-js/logging
+not-evaluated config/next-config-js/mdxRs
+not-evaluated config/next-config-js/onDemandEntries
+not-evaluated config/next-config-js/optimizePackageImports
+not-evaluated config/next-config-js/output
+not-evaluated config/next-config-js/outputHashSalt
+not-evaluated config/next-config-js/pageExtensions
+used config/next-config-js/partialPrefetching (1)
+not-evaluated config/next-config-js/poweredByHeader
+not-evaluated config/next-config-js/prefetchInlining
+not-evaluated config/next-config-js/productionBrowserSourceMaps
+not-evaluated config/next-config-js/proxyClientMaxBodySize
+used config/next-config-js/reactCompiler (1)
+not-evaluated config/next-config-js/reactMaxHeadersLength
+not-evaluated config/next-config-js/reactStrictMode
+not-evaluated config/next-config-js/redirects
+not-evaluated config/next-config-js/rewrites
+not-evaluated config/next-config-js/sassOptions
+not-evaluated config/next-config-js/serverActions
+not-evaluated config/next-config-js/serverComponentsHmrCache
+not-evaluated config/next-config-js/serverExternalPackages
+not-evaluated config/next-config-js/staleTimes
+not-evaluated config/next-config-js/staticGeneration
+not-evaluated config/next-config-js/supportsImmutableAssets
+not-evaluated config/next-config-js/taint
+not-evaluated config/next-config-js/trailingSlash
+not-evaluated config/next-config-js/transpilePackages
+not-evaluated config/next-config-js/turbopack
+not-evaluated config/next-config-js/turbopackFileSystemCache
+not-evaluated config/next-config-js/turbopackIgnoreIssue
+not-evaluated config/next-config-js/turbopackLocalPostcssConfig
+not-evaluated config/next-config-js/turbopackMemoryEviction
+not-evaluated config/next-config-js/turbopackRustReactCompiler
+used config/next-config-js/typedRoutes (1)
+not-evaluated config/next-config-js/typescript
+not-evaluated config/next-config-js/urlImports
+not-evaluated config/next-config-js/useLightningcss
+not-evaluated config/next-config-js/useTypeScriptCli
+not-evaluated config/next-config-js/webVitalsAttribution
+not-evaluated config/next-config-js/webpack
+used config/typescript (1)
+used directives/use-cache (9)
+not-evaluated directives/use-cache-private
+not-evaluated directives/use-cache-remote
+used directives/use-client (21)
+used directives/use-server (2)
+not-evaluated file-conventions/default
+used file-conventions/dynamic-routes (1)
+not-evaluated file-conventions/error
+not-evaluated file-conventions/forbidden
+not-evaluated file-conventions/instrumentation
+not-evaluated file-conventions/instrumentation-client
+not-evaluated file-conventions/intercepting-routes
+used file-conventions/layout (3)
+used file-conventions/loading (2)
+not-applicable file-conventions/mdx-components
+not-evaluated file-conventions/metadata/app-icons
+not-evaluated file-conventions/metadata/manifest
+not-evaluated file-conventions/metadata/opengraph-image
+not-evaluated file-conventions/metadata/robots
+would-apply file-conventions/metadata/sitemap
+  app
+not-evaluated file-conventions/middleware
+used file-conventions/not-found (2)
+used file-conventions/page (7)
+not-evaluated file-conventions/parallel-routes
+not-evaluated file-conventions/proxy
+not-evaluated file-conventions/public-folder
+not-evaluated file-conventions/route
+not-evaluated file-conventions/route-groups
+not-applicable file-conventions/route-segment-config/dynamicParams
+not-evaluated file-conventions/route-segment-config/instant
+not-evaluated file-conventions/route-segment-config/maxDuration
+not-evaluated file-conventions/route-segment-config/preferredRegion
+not-evaluated file-conventions/route-segment-config/prefetch
+not-evaluated file-conventions/route-segment-config/runtime
+not-applicable file-conventions/src-folder
+not-evaluated file-conventions/template
+not-evaluated file-conventions/unauthorized
+not-evaluated functions/after
+used functions/cacheLife (1)
+  also would apply
+    features/category/components/Categories.tsx
+    features/category/components/CategoryFilters.tsx
+    features/category/components/FeaturedCategories.tsx
+    features/product/components/FeaturedProducts.tsx
+    features/product/components/Hero.tsx
+    features/product/components/Product.tsx
+    features/product/components/ProductDetails.tsx
+    features/product/components/Reviews.tsx
+used functions/cacheTag (1)
+  also would apply
+    features/category/components/Categories.tsx
+    features/category/components/CategoryFilters.tsx
+    features/category/components/FeaturedCategories.tsx
+    features/product/components/FeaturedProducts.tsx
+    features/product/components/Hero.tsx
+    features/product/components/Product.tsx
+    features/product/components/ProductDetails.tsx
+    features/product/components/Reviews.tsx
+not-evaluated functions/catchError
+not-evaluated functions/connection
+used functions/cookies (2)
+not-evaluated functions/draft-mode
+not-evaluated functions/fetch
+not-evaluated functions/forbidden
+not-evaluated functions/generate-image-metadata
+not-evaluated functions/generate-metadata
+not-applicable functions/generate-sitemaps
+used functions/generate-static-params (1)
+not-evaluated functions/generate-viewport
+not-evaluated functions/headers
+not-evaluated functions/image-response
+not-evaluated functions/io
+not-evaluated functions/next-request
+not-evaluated functions/next-response
+not-evaluated functions/next-root-params
+used functions/not-found (1)
+not-evaluated functions/permanentRedirect
+used functions/redirect (3)
+used functions/refresh (1)
+not-evaluated functions/revalidatePath
+used functions/revalidateTag (1)
+not-evaluated functions/unauthorized
+not-evaluated functions/unstable_cache
+not-applicable functions/unstable_noStore
+not-evaluated functions/unstable_rethrow
+not-evaluated functions/updateTag
+used functions/use-link-status (1)
+not-evaluated functions/use-params
+not-evaluated functions/use-pathname
+not-evaluated functions/use-report-web-vitals
+used functions/use-router (4)
+used functions/use-search-params (3)
+not-evaluated functions/use-selected-layout-segment
+not-evaluated functions/use-selected-layout-segments
+not-evaluated functions/userAgent

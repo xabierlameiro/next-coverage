@@ -1,0 +1,46 @@
+name: False positive
+description: A suggestion or finding that does not apply to your project.
+labels: ["false positive"]
+body:
+  - type: input
+    id: entry
+    attributes:
+      label: Entry id
+      description: The id the report printed, for example `components/image`.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What the report said
+      description: The note and the evidence it cited. `--json` gives the exact fields.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it does not apply
+      description: What the cited code actually does. A minimal snippet helps most.
+    validations:
+      required: true
+  - type: input
+    id: next
+    attributes:
+      label: Next.js version
+      description: The version installed in the analysed project.
+    validations:
+      required: true
+  - type: dropdown
+    id: preset
+    attributes:
+      label: Preset
+      options: ["default", "--strict"]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: next-coverage version
+      description: The output of `npx next-coverage --version`.
+    validations:
+      required: true

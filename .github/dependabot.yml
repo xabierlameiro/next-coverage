@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: saturday
+    # Pinned rather than left to Dependabot's guess at the commit style: the pull request title is a
+    # required check and the input to release-please.
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    # One grouped pull request for routine bumps; majors stay individual because they need review.
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: saturday
+    commit-message:
+      prefix: chore
+      include: scope

@@ -1,0 +1,9 @@
+{
+  "name": "unflagged-app",
+  "private": true,
+  "description": "A fixture whose code is written and whose switches are off. See README.md.",
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.0"
+  }
+}

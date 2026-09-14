@@ -1,0 +1,35 @@
+name: Crash or wrong exit status
+description: The tool failed, exited 3, or refused a project it should analyse.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: What you ran, the exit status, and what it printed on stderr.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: project
+    attributes:
+      label: Project shape
+      description: Package manager, workspace or single app, anything unusual about next.config.
+  - type: input
+    id: next
+    attributes:
+      label: Next.js version
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: next-coverage version
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+    validations:
+      required: true

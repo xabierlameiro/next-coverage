@@ -1,0 +1,135 @@
+Asymmetric-al/core
+aurorascharff/next16-commerce
+rustfs/console
+ItusiAI/MokerSaaS
+ECarry/photography-website
+ixartz/Next-js-Boilerplate
+AnwarHossainSR/nextjs-16-template
+jpedroschmitz/typescript-nextjs-starter
+pqoqubbw/icons
+felipegcoutinho/openmonetis
+lorenzopalaia/HackTrack-EU
+mitul-s/mitul.ca
+basementstudio/website-2k25
+kovrichard/catalyst
+Arham-Begani/Forze
+Arindam200/Portfolio
+karthiknitt/ai-saas-starter-kit
+mbeacom/openleague
+Prushka/Sparkle
+vercel-labs/next-beats
+gredice/gredice
+nakafaai/nakafa.com apps/www
+shadcn-ui/ui apps/v4
+sanity-io/next-sanity
+documenso/documenso apps/docs
+documenso/documenso apps/openpage-api
+archestra-ai/archestra
+Skolaczk/next-starter
+CaliCastle/cali.so
+OWASP/Nest
+OWASP/Nest frontend
+Southclaws/storyden
+Southclaws/storyden web
+Vette1123/movies-streaming-platform
+techmc-wiki/gtmc
+therungg/therun-frontend
+akhila-ariyachandra/akhilaariyachandra.com
+mmousawy/cpg-website
+jamesbvaughan/livegizzrankings.com
+arspesk/sur9e
+adriangalilea/e-id
+ChicoPanama/gascoin-eth
+bun-templates/bun-nextjs-todo
+VictorQueiroz/WraithWalker
+bookernath/middleware-cache-test
+yournextstore/yournextstore
+brianlovin/briOS
+saleor/storefront
+kuestcom/prediction-market
+darkroomengineering/satus
+Illyism/musicplayer.io
+gregrickaby/viewer-for-reddit
+complexdatacollective/Fresco
+icoretech/airbroke
+jakejarvis/jarv.is
+hugodemenez/deltalytix
+aurorascharff/next16-social-media
+ACM-VIT/ExamCooker
+danactive/history
+dkast/biztro
+mdugue/manuel-dugue
+minpeter/minpeter.v2
+lucca180/itemdb
+Timonwa/odd-jobs-by-timonwa
+hiroppy/site
+mezotv/portfolio
+YashM20/devfolio
+TheOrcDev/8bitcn-ui
+gitranks/gitranks-ui
+evowizz/evowizz.dev
+DavidIlie/davidilie.com
+getsentry/sentry-changelog
+The-Obstacle-Is-The-Way/naltrexone-university
+Azerbaijan-Git-Community/website
+HM-Suiji/blog
+DreambaseAI/skillsdocs
+Santosdevbjj/portfoliosantossergio
+artiefy/artiefy
+aylisrg/Platform-Delovoy
+CloudNativeBergen/website
+DavidIlie/plexo
+agustinusnathaniel/nextarter-chakra
+MarcosCamara01/ecommerce-template
+pdsk96/PdskWork
+beep-effect/beep-effect
+payloadcms/payload
+mui/material-ui docs
+mui/mui-x docs
+mui/base-ui docs
+simstudioai/sim apps/sim
+simstudioai/sim apps/docs
+elie222/inbox-zero apps/web
+polarsource/polar clients/apps/web
+readest/readest apps/readest-app
+blockscout/frontend
+supabase/cli apps/docs
+evoluhq/evolu apps/web
+TypeCellOS/BlockNote docs
+homarr-labs/homarr apps/nextjs
+suitenumerique/docs src/frontend/apps/impress
+Portabase/portabase
+47ng/nuqs packages/e2e/next
+kachkaev/njt
+alii/website
+MystenLabs/ts-sdks
+DataRecce/recce
+incubateur-ademe/territoires-en-transitions
+blockmatic/basilic
+vercel/turborepo examples/non-monorepo
+TicketSolutionsPtyLtd/roadie
+12-Studio/Tackl
+CitiusHolidays/website
+KnightCodeSquareMatrix/RIIC-Web
+OpenCoven/coven-cave
+TuroYT/snowshare
+acarlson33/blog
+aglyn/aglyn
+deanrfiedler-gif/powerplants-one
+ding113/claude-code-hub
+erp-mafia/accounted
+ewzxyh/ewzxyh
+fccview/jotty
+haktantekin/hizliulasim
+koohdev/instas
+o-stahl/osw-studio
+overl0ad1ng/Penelope
+sairam0424/anvilry
+sonnaya2/Equilibrium
+voidcraft-labs/commcare-nova
+wayneschuller/strengthjourneys
+Ramgopalbhat10/notes
+allangrds/check-imovel
+cds-snc/platform-forms-client
+huseyindol/nextjs-approute-project
+mkayander/dStruct

@@ -1,0 +1,236 @@
+next 16.3.0, preset default
+constraints checked 12, contradicted 0
+
+not-evaluated components/font
+not-evaluated components/form
+used components/image (10)
+  also would apply
+    app/(auth)/config/page.tsx
+    components/auth/heroes/hero-static.tsx
+    components/auth/login-form.tsx
+used components/link (24)
+not-evaluated components/script
+used config/eslint (1)
+not-evaluated config/next-config-js/adapterPath
+not-evaluated config/next-config-js/allowedDevOrigins
+not-applicable config/next-config-js/appDir
+not-evaluated config/next-config-js/assetPrefix
+not-evaluated config/next-config-js/authInterrupts
+used config/next-config-js/basePath (1)
+not-evaluated config/next-config-js/cacheComponents
+not-evaluated config/next-config-js/cacheHandlers
+not-evaluated config/next-config-js/cacheLife
+not-evaluated config/next-config-js/compress
+not-evaluated config/next-config-js/crossOrigin
+not-evaluated config/next-config-js/cssChunking
+not-evaluated config/next-config-js/deploymentId
+not-evaluated config/next-config-js/devIndicators
+not-evaluated config/next-config-js/distDir
+not-applicable config/next-config-js/env
+not-evaluated config/next-config-js/expireTime
+not-applicable config/next-config-js/exportPathMap
+not-evaluated config/next-config-js/generateBuildId
+not-evaluated config/next-config-js/generateEtags
+not-evaluated config/next-config-js/headers
+not-evaluated config/next-config-js/htmlLimitedBots
+not-evaluated config/next-config-js/httpAgentOptions
+used config/next-config-js/images (1)
+not-evaluated config/next-config-js/incrementalCacheHandlerPath
+not-evaluated config/next-config-js/inlineCss
+not-evaluated config/next-config-js/instrumentationClientInject
+not-evaluated config/next-config-js/logging
+not-evaluated config/next-config-js/mdxRs
+not-evaluated config/next-config-js/onDemandEntries
+not-evaluated config/next-config-js/optimizePackageImports
+used config/next-config-js/output (1)
+not-evaluated config/next-config-js/outputHashSalt
+not-evaluated config/next-config-js/pageExtensions
+not-evaluated config/next-config-js/partialPrefetching
+not-evaluated config/next-config-js/poweredByHeader
+not-evaluated config/next-config-js/prefetchInlining
+not-evaluated config/next-config-js/productionBrowserSourceMaps
+not-evaluated config/next-config-js/proxyClientMaxBodySize
+would-apply config/next-config-js/reactCompiler
+  app/(dashboard)/account/page.tsx
+  app/(dashboard)/account/security/page.tsx
+  app/(dashboard)/audit-target/page.tsx
+  app/(dashboard)/browser/page.tsx
+  app/(dashboard)/events-target/page.tsx
+  app/(dashboard)/import-export/page.tsx
+  app/(dashboard)/oidc/page.tsx
+  app/(dashboard)/pool-decommission/page.tsx
+  app/(dashboard)/rebalance/page.tsx
+  app/(dashboard)/settings/page.tsx
+  app/(dashboard)/site-replication/page.tsx
+  app/(dashboard)/status/page.tsx
+  app/(dashboard)/tiers/page.tsx
+  components/account/mfa-setup-dialog.tsx
+  components/events/new-form.tsx
+  components/license/enterprise-section.tsx
+  components/lifecycle/new-form.tsx
+  components/pools/overview.tsx
+  components/replication/edit-form.tsx
+  components/replication/new-form.tsx
+  components/site-replication/new-form.tsx
+  components/theme/image.tsx
+  components/ui/field.tsx
+  contexts/auth-context.tsx
+  hooks/use-access-keys.ts
+  hooks/use-account.ts
+  hooks/use-audit-target.ts
+  hooks/use-bucket.ts
+  hooks/use-data-table.tsx
+  hooks/use-event-target.ts
+  hooks/use-first-accessible-dashboard-route.ts
+  hooks/use-groups.ts
+  hooks/use-import-export.ts
+  hooks/use-local-storage.ts
+  hooks/use-module-switches.ts
+  hooks/use-object.ts
+  hooks/use-oidc-config.ts
+  hooks/use-performance-data.ts
+  hooks/use-permissions.tsx
+  hooks/use-policies.ts
+  hooks/use-pool-operations.ts
+  hooks/use-runtime-capabilities.ts
+  hooks/use-site-replication.ts
+  hooks/use-sse.ts
+  hooks/use-system.ts
+  hooks/use-table-catalog.ts
+  hooks/use-tiers.ts
+  hooks/use-users.ts
+  lib/feedback/dialog.tsx
+  lib/feedback/message.tsx
+not-evaluated config/next-config-js/reactMaxHeadersLength
+not-evaluated config/next-config-js/reactStrictMode
+not-evaluated config/next-config-js/redirects
+not-evaluated config/next-config-js/rewrites
+not-evaluated config/next-config-js/sassOptions
+not-evaluated config/next-config-js/serverActions
+not-evaluated config/next-config-js/serverComponentsHmrCache
+not-evaluated config/next-config-js/serverExternalPackages
+not-evaluated config/next-config-js/staleTimes
+not-evaluated config/next-config-js/staticGeneration
+not-evaluated config/next-config-js/supportsImmutableAssets
+not-evaluated config/next-config-js/taint
+used config/next-config-js/trailingSlash (1)
+not-evaluated config/next-config-js/transpilePackages
+not-evaluated config/next-config-js/turbopack
+not-evaluated config/next-config-js/turbopackChunking
+not-evaluated config/next-config-js/turbopackFileSystemCache
+not-evaluated config/next-config-js/turbopackIgnoreIssue
+not-evaluated config/next-config-js/turbopackLocalPostcssConfig
+not-evaluated config/next-config-js/turbopackMemoryEviction
+not-evaluated config/next-config-js/turbopackRustReactCompiler
+would-apply config/next-config-js/typedRoutes
+  app/(auth)/config/page.tsx
+  app/(dashboard)/_components/performance-summary-cards.tsx
+  app/(dashboard)/account/page.tsx
+  app/(dashboard)/account/security/page.tsx
+  app/(dashboard)/browser/content.tsx
+  app/(dashboard)/browser/page.tsx
+  app/(dashboard)/buckets/page.tsx
+  app/(dashboard)/events/page.tsx
+  app/(dashboard)/lifecycle/page.tsx
+  app/(dashboard)/on-demand-migration/page.tsx
+  app/(dashboard)/replication/page.tsx
+  app/(dashboard)/table-catalog/page.tsx
+  components/app-sidebar.tsx
+  components/auth/heroes/hero-static.tsx
+  components/auth/login-form.tsx
+  components/buckets/info.tsx
+  components/buckets/list.tsx
+  components/object/list.tsx
+  components/object/transfer-dialog.tsx
+  components/on-demand-migration/backfill-dialog.tsx
+  components/on-demand-migration/config-dialog.tsx
+  components/on-demand-migration/settings-row.tsx
+  components/top-nav-breadcrumb.tsx
+  components/user/dropdown.tsx
+not-evaluated config/next-config-js/typescript
+not-evaluated config/next-config-js/urlImports
+not-evaluated config/next-config-js/useLightningcss
+not-evaluated config/next-config-js/useOffline
+not-evaluated config/next-config-js/useTypeScriptCli
+not-evaluated config/next-config-js/webVitalsAttribution
+not-evaluated config/next-config-js/webpack
+used config/typescript (1)
+not-evaluated directives/use-cache
+not-evaluated directives/use-cache-private
+not-evaluated directives/use-cache-remote
+used directives/use-client (213)
+not-evaluated directives/use-server
+not-evaluated file-conventions/default
+not-evaluated file-conventions/dynamic-routes
+not-evaluated file-conventions/error
+not-evaluated file-conventions/forbidden
+not-evaluated file-conventions/instrumentation
+not-evaluated file-conventions/instrumentation-client
+not-evaluated file-conventions/intercepting-routes
+used file-conventions/layout (3)
+not-evaluated file-conventions/loading
+not-applicable file-conventions/mdx-components
+used file-conventions/metadata/app-icons (2)
+used file-conventions/metadata/manifest (1)
+not-evaluated file-conventions/metadata/opengraph-image
+not-evaluated file-conventions/metadata/robots
+would-apply file-conventions/metadata/sitemap
+  app
+not-evaluated file-conventions/middleware
+not-evaluated file-conventions/not-found
+used file-conventions/page (30)
+not-evaluated file-conventions/parallel-routes
+not-evaluated file-conventions/proxy
+used file-conventions/public-folder (1)
+not-evaluated file-conventions/route
+used file-conventions/route-groups (2)
+not-evaluated file-conventions/route-segment-config/dynamicParams
+not-evaluated file-conventions/route-segment-config/instant
+not-evaluated file-conventions/route-segment-config/maxDuration
+not-evaluated file-conventions/route-segment-config/preferredRegion
+not-evaluated file-conventions/route-segment-config/prefetch
+not-evaluated file-conventions/route-segment-config/runtime
+not-applicable file-conventions/src-folder
+not-evaluated file-conventions/template
+not-evaluated file-conventions/unauthorized
+not-evaluated functions/after
+not-evaluated functions/cacheLife
+not-evaluated functions/cacheTag
+not-evaluated functions/catchError
+not-evaluated functions/connection
+not-evaluated functions/cookies
+not-evaluated functions/draft-mode
+not-evaluated functions/fetch
+not-evaluated functions/forbidden
+not-evaluated functions/generate-image-metadata
+not-evaluated functions/generate-metadata
+not-applicable functions/generate-sitemaps
+not-evaluated functions/generate-static-params
+not-evaluated functions/generate-viewport
+not-evaluated functions/headers
+not-evaluated functions/image-response
+not-evaluated functions/io
+not-evaluated functions/next-request
+not-evaluated functions/next-response
+not-evaluated functions/next-root-params
+not-evaluated functions/not-found
+not-evaluated functions/permanentRedirect
+not-evaluated functions/redirect
+not-evaluated functions/refresh
+not-evaluated functions/revalidatePath
+not-evaluated functions/revalidateTag
+not-evaluated functions/unauthorized
+not-evaluated functions/unstable_cache
+not-applicable functions/unstable_noStore
+not-evaluated functions/unstable_rethrow
+not-evaluated functions/updateTag
+not-evaluated functions/use-link-status
+not-evaluated functions/use-offline
+not-evaluated functions/use-params
+used functions/use-pathname (4)
+not-evaluated functions/use-report-web-vitals
+used functions/use-router (11)
+used functions/use-search-params (9)
+not-evaluated functions/use-selected-layout-segment
+not-evaluated functions/use-selected-layout-segments
+not-evaluated functions/userAgent

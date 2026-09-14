@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src", "test-support", "private"],
+  // The incomplete fixture is wrong on purpose: it imports next/* this repo does not depend on,
+  // and carries the flaws the would-apply conditions exist to find. See its README.
+  "exclude": [
+    "test-support/incomplete-app",
+    "test-support/sparse-app",
+    "test-support/unflagged-app",
+    "test-support/overconfigured-app",
+    "test-support/global-not-found-app",
+    "test-support/handler-cache-app",
+    "test-support/workspace-app"
+  ]
+}

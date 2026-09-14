@@ -1,0 +1,280 @@
+next 16.3.3, preset strict
+constraints checked 13, contradicted 0
+
+used components/font (1)
+not-evaluated components/form
+used components/image (1)
+  also would apply
+    src/components/_shared/layout/BrandLockup.tsx
+used components/link (20)
+used components/script (1)
+used config/eslint (1)
+not-evaluated config/next-config-js/adapterPath
+not-evaluated config/next-config-js/allowedDevOrigins
+not-applicable config/next-config-js/appDir
+not-evaluated config/next-config-js/assetPrefix
+not-evaluated config/next-config-js/authInterrupts
+not-evaluated config/next-config-js/basePath
+used config/next-config-js/cacheComponents (1)
+  also would apply
+    next.config.ts
+not-evaluated config/next-config-js/cacheHandlers
+not-evaluated config/next-config-js/cacheLife
+not-evaluated config/next-config-js/cacheMaxMemorySize
+not-evaluated config/next-config-js/compress
+not-evaluated config/next-config-js/crossOrigin
+not-evaluated config/next-config-js/cssChunking
+not-evaluated config/next-config-js/deploymentId
+not-evaluated config/next-config-js/devIndicators
+not-evaluated config/next-config-js/distDir
+not-applicable config/next-config-js/env
+not-evaluated config/next-config-js/expireTime
+not-applicable config/next-config-js/exportPathMap
+not-evaluated config/next-config-js/generateBuildId
+not-evaluated config/next-config-js/generateEtags
+used config/next-config-js/headers (1)
+not-evaluated config/next-config-js/htmlLimitedBots
+not-evaluated config/next-config-js/httpAgentOptions
+used config/next-config-js/images (1)
+not-evaluated config/next-config-js/incrementalCacheHandlerPath
+would-apply config/next-config-js/inlineCss
+  next.config.ts
+not-evaluated config/next-config-js/instrumentationClientInject
+not-evaluated config/next-config-js/logging
+would-apply config/next-config-js/mdxRs
+  next.config.ts
+not-evaluated config/next-config-js/onDemandEntries
+not-evaluated config/next-config-js/optimizePackageImports
+not-evaluated config/next-config-js/output
+not-evaluated config/next-config-js/outputHashSalt
+used config/next-config-js/pageExtensions (1)
+not-evaluated config/next-config-js/partialPrefetching
+not-evaluated config/next-config-js/poweredByHeader
+not-evaluated config/next-config-js/prefetchInlining
+not-evaluated config/next-config-js/productionBrowserSourceMaps
+not-evaluated config/next-config-js/proxyClientMaxBodySize
+used config/next-config-js/reactCompiler (1)
+not-evaluated config/next-config-js/reactMaxHeadersLength
+not-evaluated config/next-config-js/reactStrictMode
+used config/next-config-js/redirects (1)
+not-evaluated config/next-config-js/rewrites
+not-evaluated config/next-config-js/sassOptions
+not-evaluated config/next-config-js/serverActions
+not-evaluated config/next-config-js/serverComponentsHmrCache
+not-evaluated config/next-config-js/serverExternalPackages
+not-evaluated config/next-config-js/staleTimes
+not-evaluated config/next-config-js/staticGeneration
+not-evaluated config/next-config-js/supportsImmutableAssets
+not-evaluated config/next-config-js/taint
+not-evaluated config/next-config-js/trailingSlash
+not-evaluated config/next-config-js/transpilePackages
+not-evaluated config/next-config-js/turbopack
+would-apply config/next-config-js/turbopackChunking
+  next.config.ts
+not-evaluated config/next-config-js/turbopackFileSystemCache
+not-evaluated config/next-config-js/turbopackIgnoreIssue
+not-evaluated config/next-config-js/turbopackLocalPostcssConfig
+would-apply config/next-config-js/turbopackMemoryEviction
+  next.config.ts
+not-evaluated config/next-config-js/turbopackRustReactCompiler
+used config/next-config-js/typedRoutes (1)
+not-evaluated config/next-config-js/typescript
+not-evaluated config/next-config-js/urlImports
+not-evaluated config/next-config-js/useLightningcss
+not-evaluated config/next-config-js/useOffline
+not-evaluated config/next-config-js/useTypeScriptCli
+not-evaluated config/next-config-js/webVitalsAttribution
+not-evaluated config/next-config-js/webpack
+used config/typescript (1)
+not-evaluated directives/use-cache
+not-evaluated directives/use-cache-private
+not-evaluated directives/use-cache-remote
+used directives/use-client (75)
+used directives/use-server (3)
+not-evaluated file-conventions/default
+used file-conventions/dynamic-routes (4)
+used file-conventions/error (2)
+not-evaluated file-conventions/forbidden
+not-evaluated file-conventions/instrumentation
+not-evaluated file-conventions/instrumentation-client
+would-apply file-conventions/intercepting-routes
+  src/app/(hub)/blog/[slug]
+  src/app/(hub)/categories/[category]
+  src/app/(hub)/newsletter/[slug]
+  src/app/(hub)/shop/[slug]
+used file-conventions/layout (11)
+used file-conventions/loading (1)
+  also would apply
+    src/app/(hub)/blog/[slug]/page.tsx → src/app/loading.tsx
+    src/app/(hub)/categories/[category]/page.tsx → src/app/loading.tsx
+    src/app/(hub)/newsletter/[slug]/page.tsx → src/app/loading.tsx
+    src/app/(hub)/shop/[slug]/page.tsx → src/app/loading.tsx
+used file-conventions/mdx-components (1)
+used file-conventions/metadata/app-icons (2)
+used file-conventions/metadata/manifest (1)
+used file-conventions/metadata/opengraph-image (38)
+used file-conventions/metadata/robots (1)
+used file-conventions/metadata/sitemap (1)
+not-evaluated file-conventions/middleware
+used file-conventions/not-found (2)
+used file-conventions/page (19)
+not-evaluated file-conventions/parallel-routes
+not-evaluated file-conventions/proxy
+used file-conventions/public-folder (1)
+not-evaluated file-conventions/route
+used file-conventions/route-groups (2)
+not-applicable file-conventions/route-segment-config/dynamicParams
+would-apply file-conventions/route-segment-config/instant
+  src/app/layout.tsx
+would-apply file-conventions/route-segment-config/maxDuration
+  src/app/layout.tsx
+not-evaluated file-conventions/route-segment-config/preferredRegion
+not-evaluated file-conventions/route-segment-config/prefetch
+would-apply file-conventions/route-segment-config/runtime
+  src/app/layout.tsx
+used file-conventions/src-folder (1)
+not-evaluated file-conventions/template
+not-evaluated file-conventions/unauthorized
+not-evaluated functions/after
+not-evaluated functions/cacheLife
+not-evaluated functions/cacheTag
+not-evaluated functions/catchError
+not-evaluated functions/connection
+would-apply functions/cookies
+  src/app/layout.tsx
+would-apply functions/draft-mode
+  src/app/layout.tsx
+not-evaluated functions/fetch
+not-evaluated functions/forbidden
+would-apply functions/generate-image-metadata
+  src/app/(hub)/blog/[slug]/opengraph-image.tsx
+  src/app/(hub)/blog/[slug]/twitter-image.tsx
+  src/app/(hub)/blog/opengraph-image.tsx
+  src/app/(hub)/blog/twitter-image.tsx
+  src/app/(hub)/categories/[category]/opengraph-image.tsx
+  src/app/(hub)/categories/[category]/twitter-image.tsx
+  src/app/(hub)/categories/opengraph-image.tsx
+  src/app/(hub)/categories/twitter-image.tsx
+  src/app/(hub)/newsletter/[slug]/opengraph-image.tsx
+  src/app/(hub)/newsletter/[slug]/twitter-image.tsx
+  src/app/(hub)/newsletter/opengraph-image.tsx
+  src/app/(hub)/newsletter/twitter-image.tsx
+  src/app/(hub)/shop/[slug]/opengraph-image.tsx
+  src/app/(hub)/shop/[slug]/twitter-image.tsx
+  src/app/(hub)/shop/opengraph-image.tsx
+  src/app/(hub)/shop/twitter-image.tsx
+  src/app/(hub)/tools/opengraph-image.tsx
+  src/app/(hub)/tools/twitter-image.tsx
+  src/app/(tools)/article-to-seo-meta/opengraph-image.tsx
+  src/app/(tools)/article-to-seo-meta/twitter-image.tsx
+  src/app/(tools)/article-to-social-posts/opengraph-image.tsx
+  src/app/(tools)/article-to-social-posts/twitter-image.tsx
+  src/app/(tools)/case-converter/opengraph-image.tsx
+  src/app/(tools)/case-converter/twitter-image.tsx
+  src/app/(tools)/hash-generator/opengraph-image.tsx
+  src/app/(tools)/hash-generator/twitter-image.tsx
+  src/app/(tools)/lorem-ipsum/opengraph-image.tsx
+  src/app/(tools)/lorem-ipsum/twitter-image.tsx
+  src/app/(tools)/reading-time/opengraph-image.tsx
+  src/app/(tools)/reading-time/twitter-image.tsx
+  src/app/(tools)/slug-generator/opengraph-image.tsx
+  src/app/(tools)/slug-generator/twitter-image.tsx
+  src/app/(tools)/svg-to-jsx/opengraph-image.tsx
+  src/app/(tools)/svg-to-jsx/twitter-image.tsx
+  src/app/(tools)/word-counter/opengraph-image.tsx
+  src/app/(tools)/word-counter/twitter-image.tsx
+  src/app/opengraph-image.tsx
+  src/app/twitter-image.tsx
+used functions/generate-metadata (4)
+would-apply functions/generate-sitemaps
+  src/app/sitemap.ts
+used functions/generate-static-params (12)
+not-evaluated functions/generate-viewport
+used functions/headers (1)
+used functions/image-response (1)
+  also would apply
+    src/app/apple-icon.png
+    src/app/icon.png
+not-evaluated functions/io
+not-evaluated functions/next-request
+not-evaluated functions/next-response
+not-evaluated functions/next-root-params
+used functions/not-found (4)
+not-evaluated functions/permanentRedirect
+not-evaluated functions/redirect
+not-evaluated functions/refresh
+not-evaluated functions/revalidatePath
+would-apply functions/revalidateTag
+  src/lib/server/actions/newsletter.action.ts
+  src/lib/server/actions/seo-meta.action.ts
+  src/lib/server/actions/social-posts.action.ts
+not-evaluated functions/unauthorized
+not-evaluated functions/unstable_cache
+not-applicable functions/unstable_noStore
+not-evaluated functions/unstable_rethrow
+not-evaluated functions/updateTag
+would-apply functions/use-link-status
+  src/app/layout.tsx
+would-apply functions/use-offline
+  src/app/layout.tsx
+would-apply functions/use-params
+  src/app/(hub)/blog/[slug]/page.tsx → src/components/blog/post/index.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/blog/page.tsx → src/components/blog/index.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/categories/[category]/page.tsx → src/components/categories/CategoryDetail.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/categories/page.tsx → src/components/categories/index.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/newsletter/[slug]/page.tsx → src/components/newsletter/issue/index.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/newsletter/page.tsx → src/components/newsletter/index.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/not-found.tsx → src/components/errors/not-found/index.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/page.tsx → src/components/home/index.tsx → src/components/home/ToolsPreview.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/shop/[slug]/page.tsx → src/components/shop/product/index.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/shop/page.tsx → src/components/shop/index.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(hub)/tools/page.tsx → src/components/tools/index.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/article-to-seo-meta/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/article-to-seo-meta/page.tsx → src/components/tools/article-to-seo-meta/index.tsx → src/components/tools/article-to-seo-meta/SeoMetaTool.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/article-to-social-posts/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/article-to-social-posts/page.tsx → src/components/tools/article-to-social-posts/index.tsx → src/components/tools/article-to-social-posts/SocialPostsSettingsDrawer.tsx → src/lib/config/social-posts-writer.ts → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/case-converter/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/case-converter/page.tsx → src/components/tools/case-converter/index.tsx → src/components/_shared/page/index.ts → src/components/_shared/page/AiToolPage.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/hash-generator/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/hash-generator/page.tsx → src/components/tools/hash-generator/index.tsx → src/components/_shared/page/index.ts → src/components/_shared/page/AiToolPage.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/lorem-ipsum/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/lorem-ipsum/page.tsx → src/components/tools/lorem-ipsum/index.tsx → src/components/_shared/page/index.ts → src/components/_shared/page/AiToolPage.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/reading-time/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/reading-time/page.tsx → src/components/tools/reading-time/index.tsx → src/components/tools/reading-time/ReadingTimeTool.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/slug-generator/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/slug-generator/page.tsx → src/components/tools/slug-generator/index.tsx → src/components/_shared/page/index.ts → src/components/_shared/page/AiToolPage.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/svg-to-jsx/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/svg-to-jsx/page.tsx → src/components/tools/svg-to-jsx/index.tsx → src/components/_shared/page/index.ts → src/components/_shared/page/AiToolPage.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/word-counter/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/(tools)/word-counter/page.tsx → src/components/tools/word-counter/index.tsx → src/components/tools/word-counter/WordCounterTool.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/error.tsx → src/components/errors/error/index.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+  src/app/not-found.tsx → src/components/errors/not-found/index.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ThemeToggle.tsx → src/lib/hooks/index.ts → src/lib/hooks/use-seo-meta-tool.ts
+used functions/use-pathname (7)
+would-apply functions/use-report-web-vitals
+  src/app/layout.tsx
+used functions/use-router (1)
+used functions/use-search-params (1)
+would-apply functions/use-selected-layout-segment
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/HubNav.tsx
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/NavActions.tsx
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/NavActions.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ScrollToTop.tsx
+  src/app/(hub)/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ToolsMenu.tsx
+  src/app/(tools)/article-to-seo-meta/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/article-to-social-posts/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/case-converter/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/hash-generator/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/lorem-ipsum/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/reading-time/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/slug-generator/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/svg-to-jsx/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/(tools)/word-counter/layout.tsx → src/components/_shared/tool/index.ts → src/components/_shared/tool/ShareBar.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+  src/app/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/HubNav.tsx
+  src/app/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/NavActions.tsx
+  src/app/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ScrollToTop.tsx
+  src/app/layout.tsx → src/components/_shared/layout/index.ts → src/components/_shared/layout/ToolsMenu.tsx
+  src/app/layout.tsx → src/components/ui/index.ts → src/components/ui/blocks/index.ts → src/components/ui/blocks/CopyButton/index.tsx
+not-evaluated functions/use-selected-layout-segments
+not-evaluated functions/userAgent

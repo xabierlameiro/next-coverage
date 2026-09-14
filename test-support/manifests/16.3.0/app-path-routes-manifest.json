@@ -1,0 +1,11 @@
+{
+  "/[lang]/(home)/page": "/[lang]",
+  "/[lang]/legal/page": "/[lang]/legal",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/auth/.well-known/jwks.json/route": "/api/auth/.well-known/jwks.json",
+  "/api/auth/.well-known/openid-configuration/route": "/api/auth/.well-known/openid-configuration",
+  "/[lang]/opengraph-image/route": "/[lang]/opengraph-image",
+  "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
+  "/api/auth/session/route": "/api/auth/session"
+}

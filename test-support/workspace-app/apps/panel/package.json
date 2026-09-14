@@ -1,0 +1,4 @@
+{
+  "name": "panel",
+  "dependencies": { "next": "16.3.0", "@vendored/datos": "workspace:*" }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "global-not-found-app",
+  "private": true,
+  "description": "A fixture that adopts the global-not-found convention. See README.md.",
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.0"
+  }
+}

@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first: the answer that matters is the one about
+# the newest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor `engines.node` declares, and a current LTS. Reading the range from
+        # package.json would install the newest version satisfying it, which never tests the
+        # floor, and the floor is the half a user is most likely to be on.
+        node: ["20.19.0", "22"]
+    name: check (node ${{ matrix.node }})
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm lint
+
+      # A fresh clone runs green with nothing materialized: the tests over pinned projects are
+      # registered and skipped. This is the run a contributor gets before `pnpm fixtures`.
+      - name: The suite on a fresh clone
+        run: pnpm test
+
+      - name: Cache the pinned projects' sources
+        uses: actions/cache@v4
+        with:
+          path: .fixtures/.repos
+          key: pinned-repos-${{ hashFiles('test-support/pinned-projects.json') }}
+
+      - run: pnpm fixtures
+
+      # With every pinned project materialized, a skip over one of them is a test that stopped
+      # running, so it fails rather than skips. The floor catches the other way a suite shrinks.
+      - name: The suite over the pinned projects
+        env:
+          NEXT_COVERAGE_REQUIRE_FIXTURES: "1"
+          # 90 % of the 1932 tests the suite runs with every pinned project materialized.
+          TEST_FLOOR: "1738"
+        run: |
+          pnpm vitest run --reporter=default --reporter=json --outputFile=vitest-report.json
+          node --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync('vitest-report.json', 'utf8'));
+          const { numPassedTests: passed, numPendingTests: skipped, numFailedTests: failed } = report;
+          console.log(`passed ${passed}, skipped ${skipped}, failed ${failed}`);
+          if (failed > 0) process.exit(1);
+          // A floor rather than an exact figure: adding tests must not need this file edited, and
+          // a collapse in what runs must not pass quietly.
+          const FLOOR = Number(process.env.TEST_FLOOR);
+          if (!Number.isInteger(FLOOR) || FLOOR <= 0) {
+            console.error(`TEST_FLOOR is not a positive integer: ${process.env.TEST_FLOOR}`);
+            process.exit(1);
+          }
+          if (passed < FLOOR) {
+            console.error(`only ${passed} tests passed; the suite runs at least ${FLOOR}`);
+            process.exit(1);
+          }
+          NODE
+
+      - run: pnpm build
+
+      # The CLI is the product. A build that cannot answer --version is not one worth shipping.
+      - name: The built CLI runs
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js --help > /dev/null
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod
+
+      # The tarball a stranger installs, analysing an app with the installed binary.
+      - name: Pack smoke
+        run: pnpm pack:smoke

@@ -1,0 +1,13 @@
+{
+  "name": "overconfigured-app",
+  "private": true,
+  "description": "A fixture that configures the options nothing else in the corpus configures. See README.md.",
+  "scripts": {
+    "build": "next build --turbopack",
+    "sincronizar": "node scripts/sincronizar.ts"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.0"
+  }
+}

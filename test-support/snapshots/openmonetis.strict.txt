@@ -1,0 +1,361 @@
+next 16.3.0, preset strict
+constraints checked 13, contradicted 0
+
+used components/font (1)
+not-evaluated components/form
+used components/image (29)
+  also would apply
+    src/features/attachments/components/attachment-preview.tsx
+    src/features/transactions/components/attachments/attachment-item.tsx
+    src/shared/components/entity-avatar/establishment-logo-picker.tsx
+    src/shared/components/entity-avatar/establishment-logo.tsx
+    src/shared/components/navigation/navbar/mobile-link.tsx
+    src/shared/components/navigation/navbar/nav-dropdown.tsx
+used components/link (28)
+  also would apply
+    src/features/auth/components/login-form.tsx
+    src/features/auth/components/signup-form.tsx
+not-evaluated components/script
+not-evaluated config/eslint
+not-evaluated config/next-config-js/adapterPath
+not-evaluated config/next-config-js/allowedDevOrigins
+not-applicable config/next-config-js/appDir
+not-evaluated config/next-config-js/assetPrefix
+not-evaluated config/next-config-js/authInterrupts
+not-evaluated config/next-config-js/basePath
+used config/next-config-js/cacheComponents (1)
+not-evaluated config/next-config-js/cacheHandlers
+not-evaluated config/next-config-js/cacheLife
+not-evaluated config/next-config-js/compress
+not-evaluated config/next-config-js/crossOrigin
+not-evaluated config/next-config-js/cssChunking
+not-evaluated config/next-config-js/deploymentId
+used config/next-config-js/devIndicators (1)
+not-evaluated config/next-config-js/distDir
+not-applicable config/next-config-js/env
+not-evaluated config/next-config-js/expireTime
+not-applicable config/next-config-js/exportPathMap
+not-evaluated config/next-config-js/generateBuildId
+not-evaluated config/next-config-js/generateEtags
+used config/next-config-js/headers (1)
+not-evaluated config/next-config-js/htmlLimitedBots
+not-evaluated config/next-config-js/httpAgentOptions
+used config/next-config-js/images (1)
+not-evaluated config/next-config-js/incrementalCacheHandlerPath
+would-apply config/next-config-js/inlineCss
+  next.config.ts
+not-evaluated config/next-config-js/instrumentationClientInject
+not-evaluated config/next-config-js/logging
+not-evaluated config/next-config-js/mdxRs
+not-evaluated config/next-config-js/onDemandEntries
+used config/next-config-js/optimizePackageImports (1)
+  also would apply
+    src/app/api/attachments/[attachmentId]/presign/route.ts
+    src/app/api/auth/device/tokens/[tokenId]/route.ts
+    src/app/api/auth/device/tokens/route.ts
+    src/app/api/auth/device/verify/route.ts
+    src/app/api/inbox/batch/route.ts
+    src/app/api/inbox/route.ts
+    src/db/schema.ts
+    src/features/accounts/actions.ts
+    src/features/accounts/queries.ts
+    src/features/accounts/statement-queries.ts
+    src/features/attachments/queries.ts
+    src/features/budgets/actions.ts
+    src/features/budgets/queries.ts
+    src/features/calendar/queries.ts
+    src/features/cards/actions.ts
+    src/features/cards/queries.ts
+    src/features/categories/actions.ts
+    src/features/categories/queries.ts
+    src/features/dashboard/categories/category-details-queries.ts
+    src/features/dashboard/categories/category-history-queries.ts
+    src/features/dashboard/categories/category-overview-queries.ts
+    src/features/dashboard/expenses/installment-analysis-queries.ts
+    src/features/dashboard/invoices/invoices-queries.ts
+    src/features/dashboard/lib/accounts-queries.ts
+    src/features/dashboard/lib/inbox-snapshot-queries.ts
+    src/features/dashboard/lib/navbar-queries.ts
+    src/features/dashboard/lib/payers-queries.ts
+    src/features/dashboard/lib/preferences-queries.ts
+    src/features/dashboard/lib/transaction-filters.ts
+    src/features/dashboard/notes/notes-queries.ts
+    src/features/dashboard/notifications/notifications-actions.ts
+    src/features/dashboard/notifications/notifications-queries.ts
+    src/features/dashboard/overview/current-period-overview-queries.ts
+    src/features/dashboard/overview/period-overview-queries.ts
+    src/features/dashboard/widget-registry/widget-actions.ts
+    src/features/inbox/actions.ts
+    src/features/inbox/queries.ts
+    src/features/insights/actions/aggregate.ts
+    src/features/insights/actions/storage.ts
+    src/features/insights/queries.ts
+    src/features/invoices/actions.ts
+    src/features/invoices/queries.ts
+    src/features/notes/actions.ts
+    src/features/notes/actions/attachments.ts
+    src/features/notes/queries.ts
+    src/features/payers/actions.ts
+    src/features/payers/lib/detail-actions.ts
+    src/features/payers/lib/detail-queries.ts
+    src/features/payers/queries.ts
+    src/features/reports/establishments/queries.ts
+    src/features/reports/lib/cards-report-queries.ts
+    src/features/reports/lib/category-chart-queries.ts
+    src/features/reports/lib/category-report-queries.ts
+    src/features/reports/lib/category-trends-queries.ts
+    src/features/settings/actions.ts
+    src/features/settings/queries.ts
+    src/features/transactions/actions/anticipation.ts
+    src/features/transactions/actions/attachments.ts
+    src/features/transactions/actions/bulk-actions.ts
+    src/features/transactions/actions/category-memory-action.ts
+    src/features/transactions/actions/core.ts
+    src/features/transactions/actions/fetch-by-id.ts
+    src/features/transactions/actions/import-action.ts
+    src/features/transactions/actions/refund-action.ts
+    src/features/transactions/actions/single-actions.ts
+    src/features/transactions/lib/anticipation-queries.ts
+    src/features/transactions/lib/attachment-copy.ts
+    src/features/transactions/lib/attachment-queries.ts
+    src/features/transactions/lib/page-helpers.ts
+    src/features/transactions/queries.ts
+    src/shared/lib/accounts/query-filters.ts
+    src/shared/lib/categories/defaults.ts
+    src/shared/lib/db.ts
+    src/shared/lib/logo/establishment-logo-actions.ts
+    src/shared/lib/logo/establishment-logo-queries.ts
+    src/shared/lib/payers/access.ts
+    src/shared/lib/payers/defaults.ts
+    src/shared/lib/payers/details.ts
+    src/shared/lib/payers/get-admin-id.ts
+    src/shared/lib/payers/notifications.ts
+    src/shared/lib/preferences/queries.ts
+used config/next-config-js/output (1)
+not-evaluated config/next-config-js/outputHashSalt
+not-evaluated config/next-config-js/pageExtensions
+not-evaluated config/next-config-js/partialPrefetching
+not-evaluated config/next-config-js/poweredByHeader
+not-evaluated config/next-config-js/prefetchInlining
+not-evaluated config/next-config-js/productionBrowserSourceMaps
+not-evaluated config/next-config-js/proxyClientMaxBodySize
+used config/next-config-js/reactCompiler (1)
+not-evaluated config/next-config-js/reactMaxHeadersLength
+not-evaluated config/next-config-js/reactStrictMode
+not-evaluated config/next-config-js/redirects
+not-evaluated config/next-config-js/rewrites
+not-evaluated config/next-config-js/sassOptions
+not-evaluated config/next-config-js/serverActions
+not-evaluated config/next-config-js/serverComponentsHmrCache
+not-evaluated config/next-config-js/serverExternalPackages
+not-evaluated config/next-config-js/staleTimes
+not-evaluated config/next-config-js/staticGeneration
+not-evaluated config/next-config-js/supportsImmutableAssets
+not-evaluated config/next-config-js/taint
+not-evaluated config/next-config-js/trailingSlash
+not-evaluated config/next-config-js/transpilePackages
+not-evaluated config/next-config-js/turbopack
+would-apply config/next-config-js/turbopackChunking
+  next.config.ts
+not-evaluated config/next-config-js/turbopackFileSystemCache
+not-evaluated config/next-config-js/turbopackIgnoreIssue
+not-evaluated config/next-config-js/turbopackLocalPostcssConfig
+would-apply config/next-config-js/turbopackMemoryEviction
+  next.config.ts
+not-evaluated config/next-config-js/turbopackRustReactCompiler
+would-apply config/next-config-js/typedRoutes
+  src/app/(landing-page)/page.tsx
+  src/app/error.tsx
+  src/app/not-found.tsx
+  src/features/budgets/components/budget-card.tsx
+  src/features/categories/components/categories-page.tsx
+  src/features/dashboard/components/bills/bill-list-item.tsx
+  src/features/dashboard/components/category-breakdown/category-breakdown-list-item.tsx
+  src/features/dashboard/components/dashboard-metrics-cards.tsx
+  src/features/dashboard/components/goals-progress/goals-progress-item.tsx
+  src/features/dashboard/components/invoices/invoice-list-item.tsx
+  src/features/dashboard/components/payment-overview/payment-breakdown-list-item.tsx
+  src/features/dashboard/components/widgets/category-trends-widget.tsx
+  src/features/dashboard/components/widgets/inbox-widget.tsx
+  src/features/dashboard/components/widgets/my-accounts-widget.tsx
+  src/features/dashboard/components/widgets/payers-widget.tsx
+  src/features/dashboard/widget-registry/widget-config.tsx
+  src/features/insights/components/model-selection-card.tsx
+  src/features/landing/components/landing-navbar.tsx
+  src/features/landing/components/mobile-nav.tsx
+  src/features/payers/components/details/payer-header-card.tsx
+  src/features/payers/components/payer-card.tsx
+  src/features/reports/components/cards/cards-overview.tsx
+  src/features/reports/components/category-report-cards.tsx
+  src/features/reports/components/category-table.tsx
+  src/features/transactions/components/table/transactions-columns.tsx
+  src/shared/components/navigation/navbar/nav-link.tsx
+  src/shared/components/navigation/navbar/navbar-shell.tsx
+  src/shared/components/navigation/navbar/navbar-user.tsx
+not-evaluated config/next-config-js/typescript
+not-evaluated config/next-config-js/urlImports
+not-evaluated config/next-config-js/useLightningcss
+not-evaluated config/next-config-js/useOffline
+not-evaluated config/next-config-js/useTypeScriptCli
+not-evaluated config/next-config-js/webVitalsAttribution
+not-evaluated config/next-config-js/webpack
+used config/typescript (1)
+used directives/use-cache (8)
+  also would apply
+    src/features/landing/queries.ts
+not-evaluated directives/use-cache-private
+not-evaluated directives/use-cache-remote
+used directives/use-client (227)
+used directives/use-server (27)
+not-evaluated file-conventions/default
+used file-conventions/dynamic-routes (9)
+used file-conventions/error (1)
+  also would apply
+    src/app/error.tsx
+not-evaluated file-conventions/forbidden
+not-evaluated file-conventions/instrumentation
+not-evaluated file-conventions/instrumentation-client
+would-apply file-conventions/intercepting-routes
+  src/app/(dashboard)/categories/[categoryId]
+  src/app/(dashboard)/payers/[payerId]
+used file-conventions/layout (21)
+used file-conventions/loading (20)
+  also would apply
+    src/app/(dashboard)/settings/page.tsx
+    src/app/(landing-page)/page.tsx
+not-applicable file-conventions/mdx-components
+used file-conventions/metadata/app-icons (1)
+used file-conventions/metadata/manifest (1)
+would-apply file-conventions/metadata/opengraph-image
+  src/app/(landing-page)/layout.tsx
+used file-conventions/metadata/robots (1)
+used file-conventions/metadata/sitemap (1)
+not-evaluated file-conventions/middleware
+used file-conventions/not-found (1)
+used file-conventions/page (27)
+not-evaluated file-conventions/parallel-routes
+used file-conventions/proxy (1)
+used file-conventions/public-folder (1)
+used file-conventions/route (13)
+used file-conventions/route-groups (3)
+not-applicable file-conventions/route-segment-config/dynamicParams
+would-apply file-conventions/route-segment-config/instant
+  src/app/layout.tsx
+would-apply file-conventions/route-segment-config/maxDuration
+  src/app/layout.tsx
+not-evaluated file-conventions/route-segment-config/preferredRegion
+not-evaluated file-conventions/route-segment-config/prefetch
+would-apply file-conventions/route-segment-config/runtime
+  src/app/layout.tsx
+used file-conventions/src-folder (1)
+not-evaluated file-conventions/template
+not-evaluated file-conventions/unauthorized
+not-evaluated functions/after
+used functions/cacheLife (8)
+used functions/cacheTag (7)
+  also would apply
+    src/features/landing/queries.ts
+used functions/catchError (1)
+used functions/connection (26)
+would-apply functions/cookies
+  src/app/layout.tsx
+would-apply functions/draft-mode
+  src/app/layout.tsx
+used functions/fetch (2)
+not-evaluated functions/forbidden
+not-evaluated functions/generate-image-metadata
+not-evaluated functions/generate-metadata
+would-apply functions/generate-sitemaps
+  src/app/sitemap.ts
+would-apply functions/generate-static-params
+  src/app/(dashboard)/categories/[categoryId]/page.tsx
+  src/app/(dashboard)/payers/[payerId]/page.tsx
+not-evaluated functions/generate-viewport
+used functions/headers (6)
+would-apply functions/image-response
+  src/app/apple-icon.png
+not-evaluated functions/io
+used functions/next-request (1)
+  also would apply
+    src/app/api/insights/saved/route.ts
+    src/app/api/logo/mapping/route.ts
+    src/app/api/logo/search/route.ts
+used functions/next-response (13)
+not-evaluated functions/next-root-params
+used functions/not-found (4)
+not-evaluated functions/permanentRedirect
+used functions/redirect (4)
+not-evaluated functions/refresh
+used functions/revalidatePath (5)
+used functions/revalidateTag (1)
+  also would apply
+    src/features/accounts/actions.ts
+    src/features/budgets/actions.ts
+    src/features/cards/actions.ts
+    src/features/categories/actions.ts
+    src/features/dashboard/notifications/notifications-actions.ts
+    src/features/inbox/actions.ts
+    src/features/insights/actions/generate.ts
+    src/features/insights/actions/storage.ts
+    src/features/invoices/actions.ts
+    src/features/notes/actions.ts
+    src/features/notes/actions/attachments.ts
+    src/features/transactions/actions/anticipation.ts
+    src/features/transactions/actions/attachments.ts
+    src/features/transactions/actions/bulk-actions.ts
+    src/features/transactions/actions/category-memory-action.ts
+    src/features/transactions/actions/export-actions.ts
+    src/features/transactions/actions/fetch-by-id.ts
+    src/features/transactions/actions/fetch-dialog-options.ts
+    src/features/transactions/actions/import-action.ts
+    src/features/transactions/actions/refund-action.ts
+    src/features/transactions/actions/single-actions.ts
+    src/shared/lib/logo/establishment-logo-actions.ts
+    src/shared/lib/payers/notifications.ts
+not-evaluated functions/unauthorized
+not-evaluated functions/unstable_cache
+not-applicable functions/unstable_noStore
+would-apply functions/unstable_rethrow
+  src/app/api/transactions/installments/[seriesId]/anticipations/route.ts → src/shared/lib/auth/server.ts
+  src/features/accounts/actions.ts → src/shared/lib/auth/server.ts
+  src/features/budgets/actions.ts → src/shared/lib/auth/server.ts
+  src/features/cards/actions.ts → src/shared/lib/auth/server.ts
+  src/features/categories/actions.ts → src/shared/lib/auth/server.ts
+  src/features/dashboard/notifications/notifications-actions.ts → src/shared/lib/auth/server.ts
+  src/features/dashboard/widget-registry/widget-actions.ts → src/shared/lib/auth/server.ts
+  src/features/inbox/actions.ts → src/shared/lib/auth/server.ts
+  src/features/insights/actions/generate.ts → src/shared/lib/auth/server.ts
+  src/features/insights/actions/storage.ts → src/shared/lib/auth/server.ts
+  src/features/insights/components/insights-page.tsx → src/features/insights/actions.ts → src/features/insights/actions/generate.ts → src/shared/lib/auth/server.ts
+  src/features/invoices/actions.ts → src/shared/lib/auth/server.ts
+  src/features/notes/actions.ts → src/shared/lib/auth/server.ts
+  src/features/notes/actions/attachments.ts → src/shared/lib/auth/server.ts
+  src/features/notes/components/note-attachments-field.tsx → src/features/notes/actions/attachments.ts → src/shared/lib/auth/server.ts
+  src/features/payers/actions.ts → src/shared/lib/auth/server.ts
+  src/features/payers/lib/detail-actions.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/anticipation.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/attachments.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/bulk-actions.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/export-actions.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/refund-action.ts → src/shared/lib/auth/server.ts
+  src/features/transactions/actions/single-actions.ts → src/shared/lib/auth/server.ts
+  src/shared/lib/logo/establishment-logo-actions.ts → src/shared/lib/auth/server.ts
+not-evaluated functions/updateTag
+would-apply functions/use-link-status
+  src/app/layout.tsx
+would-apply functions/use-offline
+  src/app/layout.tsx
+not-evaluated functions/use-params
+used functions/use-pathname (8)
+would-apply functions/use-report-web-vitals
+  src/app/layout.tsx
+used functions/use-router (28)
+used functions/use-search-params (8)
+would-apply functions/use-selected-layout-segment
+  src/app/(dashboard)/attachments/layout.tsx → src/shared/components/month-picker/month-navigation.tsx → src/shared/components/month-picker/use-month-period.ts
+  src/app/(dashboard)/layout.tsx → src/shared/components/navigation/navbar/app-navbar.tsx → src/shared/components/navigation/navbar/nav-menu.tsx
+  src/app/(dashboard)/layout.tsx → src/shared/components/navigation/navbar/app-navbar.tsx → src/shared/components/navigation/navbar/nav-menu.tsx → src/shared/components/navigation/navbar/mobile-link.tsx
+  src/app/(dashboard)/layout.tsx → src/shared/components/navigation/navbar/app-navbar.tsx → src/shared/components/navigation/navbar/nav-menu.tsx → src/shared/components/navigation/navbar/nav-dropdown.tsx
+  src/app/(dashboard)/layout.tsx → src/shared/components/navigation/navbar/app-navbar.tsx → src/shared/components/navigation/navbar/nav-menu.tsx → src/shared/components/navigation/navbar/nav-pill.tsx
+not-evaluated functions/use-selected-layout-segments
+not-evaluated functions/userAgent

@@ -1,0 +1,17 @@
+node_modules/
+# The vendored monorepo commits the link a package manager would write; see its README.
+!test-support/workspace-app/apps/panel/node_modules/
+dist/
+coverage/
+*.log
+*.tgz
+# An npm auth token must never be committed.
+.npmrc
+.DS_Store
+.next/
+
+# Scratch directories that track writes next to any file that gets edited.
+.cc-writes/
+
+# Pinned projects, materialized by `pnpm fixtures`.
+.fixtures/

@@ -1,0 +1,34 @@
+name: Missed API
+description: The project uses an API, or would benefit from one, and the report does not say so.
+labels: ["missed api"]
+body:
+  - type: input
+    id: entry
+    attributes:
+      label: API
+      description: The API or entry id, for example `functions/after`.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected the report to say
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The code involved
+      description: A minimal snippet, and where it sits in the app directory.
+  - type: input
+    id: next
+    attributes:
+      label: Next.js version
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: next-coverage version
+    validations:
+      required: true

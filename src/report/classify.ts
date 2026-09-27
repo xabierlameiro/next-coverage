@@ -19,8 +19,8 @@ import { EMPTY_CONTRAST } from "../collect/contrast.js";
 import type { SurfaceEntry } from "../collect/docs.js";
 import type { Declaration, Ledger } from "../collect/ledger.js";
 import { EMPTY_LEDGER } from "../collect/ledger.js";
-import type { ElsewhereSignal, MissingPackage } from "../collect/sources.js";
-import { placedElsewhere } from "../collect/sources.js";
+import type { ElsewhereSignal, HeldUnread, MissingPackage } from "../collect/sources.js";
+import { frameworkModulesHeldUnread, placedElsewhere } from "../collect/sources.js";
 import type { WeightContrast, WeightReport } from "../collect/weight.js";
 import { EMPTY_WEIGHT_CONTRAST, EMPTY_WEIGHTS } from "../collect/weight.js";
 import { MissingEvidenceError, MissingGainError } from "../errors.js";
@@ -213,6 +213,12 @@ export type CoverageResult = {
   readonly unmatchedDeclarations: number;
   /** Values excluded from matching because they are not literals. */
   readonly unresolvedValues: number;
+  /**
+   * Files holding a module of the framework whole, as a namespace or through `import()`, in a form
+   * whose uses were not read, relative to the project. An entry reporting nothing may be used in
+   * one, and a declaration reported with no counterpart may have it there.
+   */
+  readonly modulesHeldUnread: readonly HeldUnread[];
   /** Modules on the client side reaching for something only the server has. */
   readonly boundaryLeaks: number;
   /** Files on the client side of the boundary, including those that declare nothing. */
@@ -241,6 +247,22 @@ export type CoverageResult = {
    * nothing rather than a project where the question does not arise.
    */
   readonly linkedPackages?: { readonly scanned: number; readonly unmatched: number };
+  /**
+   * Source files and directories the scan found and could not open, and links it found leading
+   * outside the project, relative to the project. All empty is a scan that read everything it
+   * found; anything else makes every entry reporting nothing a lower bound, because the use may
+   * sit in a file nobody opened.
+   */
+  readonly unreadSources: {
+    readonly files: readonly string[];
+    readonly directories: readonly string[];
+    readonly links: readonly string[];
+  };
+  /**
+   * Links under the app directory the route walk met and did not follow, relative to the project.
+   * A route reached through one is in no figure here, so the routes reported are a lower bound.
+   */
+  readonly skippedLinks: readonly SkippedLink[];
   /** Packages the code imports and the project does not have. Not a verdict about adoption. */
   readonly missingPackages: readonly MissingPackage[];
   /** Documented constraints examined, so an empty section reads as checked rather than absent. */
@@ -300,6 +322,28 @@ function argued(id: string, predicate: string, verdict: Suggestion): Suggestion 
 function relativeTo(root: string, path: string): string {
   const base = root.length > 1 && root.endsWith(sep) ? root.slice(0, -sep.length) : root;
   return path.startsWith(base) ? path.slice(base.length + 1) || "." : path;
+}
+
+/** Where a link the route walk did not follow is, and where it led. */
+export type SkippedLink = {
+  readonly path: string;
+  readonly leads: "outside" | "back" | "file";
+};
+
+function skippedLinks(context: PredicateContext): readonly SkippedLink[] {
+  return context.tree.issues
+    .flatMap((issue) =>
+      issue.kind === "skipped-symlink"
+        ? [{ path: relativeTo(context.project.root, issue.directory), leads: issue.leads }]
+        : [],
+    )
+    .sort((a, b) => (a.path === b.path ? 0 : a.path < b.path ? -1 : 1));
+}
+
+function modulesHeldUnread(context: PredicateContext): readonly HeldUnread[] {
+  return frameworkModulesHeldUnread(context.sources)
+    .map((held) => ({ ...held, path: relativeTo(context.project.root, held.path) }))
+    .sort((a, b) => (a.path === b.path ? 0 : a.path < b.path ? -1 : 1));
 }
 
 function sortedEvidence(evidence: readonly string[], root: string): readonly string[] {
@@ -808,6 +852,7 @@ export function classify(
       0,
     ),
     unresolvedValues: ledger.unresolved,
+    modulesHeldUnread: modulesHeldUnread(context),
     boundaryLeaks: boundary.leaks.length,
     clientClosure: boundary.closure,
     clientReachedWithoutDeclaring: boundary.reachedWithoutDeclaring,
@@ -821,6 +866,8 @@ export function classify(
     ...(context.sources.linked.scanned === 0 && context.sources.linked.unmatched === 0
       ? {}
       : { linkedPackages: context.sources.linked }),
+    unreadSources: context.sources.unread,
+    skippedLinks: skippedLinks(context),
     missingPackages: context.sources.resolution.missingPackages,
     withheldHeuristics,
     conditionsNeedingBuild,

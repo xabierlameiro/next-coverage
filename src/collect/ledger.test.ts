@@ -62,6 +62,27 @@ describe("tag matching", () => {
     expect(ledger.phantomTags).toEqual([]);
   });
 
+  it("should read every tag a single call produces", () => {
+    const ledger = ledgerOf({
+      "app/a.ts":
+        "import { cacheTag } from 'next/cache'\nexport const a = () => cacheTag('x', 'y')\n",
+      "app/b.ts":
+        "import { revalidateTag } from 'next/cache'\nexport const b = () => revalidateTag('y', 'max')\n",
+    });
+    expect(values(ledger.orphanTags)).toEqual(["x"]);
+    // The second argument of an invalidation is a profile, and stays unread as a tag.
+    expect(ledger.phantomTags).toEqual([]);
+  });
+
+  it("should count the computed tag written beside a literal one", () => {
+    const ledger = ledgerOf({
+      "app/a.ts":
+        "import { cacheTag } from 'next/cache'\nexport const a = (id) => cacheTag('x', id)\n",
+    });
+    expect(values(ledger.orphanTags)).toEqual(["x"]);
+    expect(ledger.unresolved).toBe(1);
+  });
+
   it("should accept updateTag as an invalidation", () => {
     const ledger = ledgerOf({
       "app/a.ts": PRODUCE,
@@ -143,6 +164,86 @@ describe("tag matching", () => {
   it("should name the file each declaration came from", () => {
     const ledger = ledgerOf({ "app/a.ts": PRODUCE });
     expect(ledger.orphanTags[0]?.files[0]).toContain("a.ts");
+  });
+});
+
+describe("the cache module held whole", () => {
+  it("should read a call made off a namespace", () => {
+    const ledger = ledgerOf({
+      "app/a.ts":
+        "import * as cache from 'next/cache'\nexport const a = () => cache.cacheTag('x')\n",
+      "app/b.ts":
+        "import * as cache from 'next/cache'\nexport const b = () => cache.revalidateTag('x', 'max')\n",
+    });
+    expect(ledger.orphanTags).toEqual([]);
+    expect(ledger.phantomTags).toEqual([]);
+  });
+
+  it("should read the names taken off an awaited import", () => {
+    const ledger = ledgerOf({
+      "app/a.ts": PRODUCE,
+      "app/b.ts":
+        "export async function b() {\n" +
+        "  const { revalidateTag: drop } = await import('next/cache')\n" +
+        "  drop('x', 'max')\n" +
+        "}\n",
+    });
+    expect(ledger.orphanTags).toEqual([]);
+  });
+
+  it("should read a call off the name an awaited import was given", () => {
+    const ledger = ledgerOf({
+      "app/a.ts": PRODUCE,
+      "app/b.ts":
+        "export async function b() {\n" +
+        "  const cache = await import('next/cache')\n" +
+        "  cache.revalidateTag('x', 'max')\n" +
+        "}\n",
+    });
+    expect(ledger.orphanTags).toEqual([]);
+  });
+
+  it("should read a call made on the awaited import itself", () => {
+    const ledger = ledgerOf({
+      "app/a.ts": PRODUCE,
+      "app/b.ts":
+        "export async function b() {\n  ;(await import('next/cache')).revalidateTag('x', 'max')\n}\n",
+    });
+    expect(ledger.orphanTags).toEqual([]);
+  });
+
+  it("should not read a call off a namespace of another module", () => {
+    const ledger = ledgerOf({
+      "app/a.ts": PRODUCE,
+      "app/b.ts":
+        "import * as mine from './mine'\nexport const b = () => mine.revalidateTag('x')\n",
+      "app/mine.ts": "export const revalidateTag = (tag: string) => tag\n",
+    });
+    expect(values(ledger.orphanTags)).toEqual(["x"]);
+  });
+
+  it.each([
+    ["handed on", "import * as cache from 'next/cache'\nexport const b = () => run(cache)\n"],
+    [
+      "indexed by a computed name",
+      "import * as cache from 'next/cache'\nexport const b = (n) => cache[n]('x')\n",
+    ],
+    [
+      "taken apart after the import",
+      "import * as cache from 'next/cache'\nconst { revalidateTag } = cache\nrevalidateTag('x')\n",
+    ],
+    [
+      "a promise handed to then",
+      "export const b = () => import('next/cache').then((cache) => cache.revalidateTag('x'))\n",
+    ],
+    [
+      "taken with a rest element",
+      "export async function b() {\n  const { ...all } = await import('next/cache')\n  all.revalidateTag('x')\n}\n",
+    ],
+  ])("should still report the tag where the module is %s", (_, contents) => {
+    // The scan names the file, and the finding is not withheld for it.
+    const ledger = ledgerOf({ "app/a.ts": PRODUCE, "app/b.ts": contents });
+    expect(values(ledger.orphanTags)).toEqual(["x"]);
   });
 });
 

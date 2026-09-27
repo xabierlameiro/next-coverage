@@ -411,7 +411,12 @@ export function readWebVitals(installed: InstalledNext | undefined): Resolved<Re
   }
 
   const names = [...declaration.matchAll(/"([^"]+)"/g)].flatMap((m) => m[1] ?? []);
-  return checkPlausible(names, "reading the accepted web-vitals metrics", WEB_VITALS_LIST);
+  // Not the floor the package lists answer to: this one holds six names, so that floor refused
+  // every read of it and the condition resting on it never ran.
+  if (names.length === 0) {
+    return unresolved(`the WEB_VITALS declaration in ${WEB_VITALS_LIST} names no metric`);
+  }
+  return resolved(new Set(names));
 }
 
 /**

@@ -151,8 +151,28 @@ describe("structural issues", () => {
     const app = syntheticApp({ "keep/page.tsx": PAGE });
     symlinkSync(outside, join(app, "escape"), "dir");
     const tree = treeOf(app);
-    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toHaveLength(1);
+    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toEqual([
+      { kind: "skipped-symlink", directory: join(app, "escape"), leads: "outside" },
+    ]);
     expect(routableUrls(tree)).toEqual(["/keep"]);
+  });
+
+  it("should name a convention that is a link to a file, which it does not read", () => {
+    const app = syntheticApp({ "real/page.tsx": PAGE, "real/notes.tsx": PAGE, "linked/.keep": "" });
+    symlinkSync(join(app, "real", "page.tsx"), join(app, "linked", "page.tsx"), "file");
+    symlinkSync(join(app, "real", "notes.tsx"), join(app, "linked", "notes.tsx"), "file");
+    const tree = treeOf(app);
+    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toEqual([
+      { kind: "skipped-symlink", directory: join(app, "linked", "page.tsx"), leads: "file" },
+    ]);
+    expect(routableUrls(tree)).toEqual(["/real"]);
+  });
+
+  it("should say nothing about a link leading nowhere", () => {
+    const app = syntheticApp({ "keep/page.tsx": PAGE });
+    symlinkSync(join(app, "gone"), join(app, "keep", "layout.tsx"), "file");
+    const tree = treeOf(app);
+    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toEqual([]);
   });
 
   it("should follow a symlink that stays inside the app directory", () => {
@@ -161,6 +181,31 @@ describe("structural issues", () => {
     const tree = treeOf(app);
     expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toEqual([]);
     expect(routableUrls(tree)).toEqual(["/aliased", "/real"]);
+  });
+
+  /**
+   * The walk ended only because the path outgrew what the filesystem accepts, some two hundred
+   * levels down, and every level was a route in the tree.
+   */
+  it("should not follow a symlink leading back to the directory holding it", () => {
+    const app = syntheticApp({ "keep/page.tsx": PAGE });
+    symlinkSync(app, join(app, "loop"), "dir");
+    const tree = treeOf(app);
+    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toEqual([
+      { kind: "skipped-symlink", directory: join(app, "loop"), leads: "back" },
+    ]);
+    expect(routableUrls(tree)).toEqual(["/keep"]);
+    expect(tree.nodes.map((node) => node.dirName).sort()).toEqual(["", "keep"]);
+  });
+
+  it("should not follow two directories linking to each other round again", () => {
+    const app = syntheticApp({ "a/page.tsx": PAGE, "b/page.tsx": PAGE });
+    symlinkSync(join(app, "b"), join(app, "a", "to-b"), "dir");
+    symlinkSync(join(app, "a"), join(app, "b", "to-a"), "dir");
+    const tree = treeOf(app);
+    // Each link is followed once, which is a route the project serves, and not back again.
+    expect(routableUrls(tree)).toEqual(["/a", "/a/to-b", "/b", "/b/to-a"]);
+    expect(tree.issues.filter((i) => i.kind === "skipped-symlink")).toHaveLength(2);
   });
 
   it("should produce an empty tree for an app directory with no routes", () => {

@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -15,6 +15,7 @@ import type { BuildOutput } from "../collect/output.js";
 import { EMPTY_JOIN, NO_WEIGHTS } from "../collect/output.js";
 import type { Bundler, ProjectContext } from "../collect/project.js";
 import type { RouteTree } from "../collect/routes.js";
+import { scanSources } from "../collect/sources.js";
 import { MissingEvidenceError } from "../errors.js";
 import { resolved, unresolved } from "../types.js";
 import { classify } from "./classify.js";
@@ -71,6 +72,7 @@ function contextWith(flagsOn: readonly string[] = []): PredicateContext {
     byPath: new Map(),
     resolution: { internal: 0, external: 0, unresolved: 0, assets: 0, missingPackages: [] },
     linked: { scanned: 0, unmatched: 0 },
+    unread: { files: [], directories: [], links: [] },
   };
   return {
     project,
@@ -716,7 +718,15 @@ describe("recorded weights never move a bucket", () => {
           { url: "/b", modules: new Set(), filePathRoutes: [], entries: [] },
         ],
       },
-      { agreement: 1, orderedPairs: 1, compared: 2, withoutFigure: 0, ranked: [], furthest: [] },
+      {
+        agreement: 1,
+        orderedPairs: 1,
+        compared: 2,
+        withoutFigure: 0,
+        unreadableEntries: 0,
+        ranked: [],
+        furthest: [],
+      },
     );
     expect(withWeights.used).toBe(without.used);
     expect(withWeights.evaluated).toBe(without.evaluated);
@@ -974,5 +984,53 @@ describe("which release a verdict was measured against", () => {
     expect(result.verdictsAgainstThisRelease).toBe(0);
     expect(result.verdictsAgainstAnOlderRelease).toBe(0);
     expect(result.verdictsAgainstANewerRelease).toBe(0);
+  });
+});
+
+describe("the links the route walk did not follow", () => {
+  const catalogue = () => buildCatalog(surfaceOf([OPT_IN.id]), [OPT_IN]);
+
+  it("should hold none where the walk skipped nothing", () => {
+    expect(classify(catalogue(), contextWith()).skippedLinks).toEqual([]);
+  });
+
+  it("should name each one from the project down, in order, and leave the other issues out", () => {
+    const tree: RouteTree = {
+      ...emptyTree,
+      issues: [
+        { kind: "skipped-symlink", directory: `${ROOT}/app/shared`, leads: "outside" },
+        { kind: "slot-without-default", slot: "@modal", directory: `${ROOT}/app/@modal` },
+        { kind: "skipped-symlink", directory: `${ROOT}/app/loop`, leads: "back" },
+      ],
+    };
+    expect(classify(catalogue(), { ...contextWith(), tree }).skippedLinks).toEqual([
+      { path: "app/loop", leads: "back" },
+      { path: "app/shared", leads: "outside" },
+    ]);
+  });
+});
+
+describe("the framework modules a file held whole and unread", () => {
+  const catalogue = () => buildCatalog(surfaceOf([OPT_IN.id]), [OPT_IN]);
+
+  it("should hold none where no file holds one", () => {
+    expect(classify(catalogue(), contextWith()).modulesHeldUnread).toEqual([]);
+  });
+
+  it("should name each file from the project down, in order, with its modules", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "next-coverage-held-")));
+    writeFileSync(join(root, "b.ts"), "import * as cache from 'next/cache'\nrun(cache)\n");
+    writeFileSync(join(root, "a.ts"), "import('next/headers').then((held) => run(held))\n");
+    writeFileSync(join(root, "c.ts"), "import('./a').then((held) => run(held))\n");
+    const base = contextWith();
+    const context = {
+      ...base,
+      project: { ...base.project, root },
+      sources: scanSources(root),
+    };
+    expect(classify(catalogue(), context).modulesHeldUnread).toEqual([
+      { path: "a.ts", modules: ["next/headers"] },
+      { path: "b.ts", modules: ["next/cache"] },
+    ]);
   });
 });

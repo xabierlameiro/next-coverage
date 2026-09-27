@@ -22,4 +22,4 @@ First public release.
 - The build contrast: rendering-mode claims checked against the manifests of an existing production
   build.
 - `--strict` for heuristics that report what was observed rather than proven, `--findings` for the
-  findings without the inventory, and `--json` with `schemaVersion: 1`.
+  findings without the inventory, and `--json` with `schemaVersion: 3`.

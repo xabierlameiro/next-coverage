@@ -144,7 +144,7 @@ build disagreed with, or any count the summary states.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "nextVersion": "16.3.0",
   "preset": "default",
   "projectRoot": "/path/to/project",
@@ -176,6 +176,27 @@ suggestion, each with its own `note`, `gain` and `evidence`. `docs` is on every 
 was derived from, as the path the installed package ships and as the public URL. The channels that
 hang off an entry are fields of it, each absent when empty: `silence`, `skippedForFlag`,
 `needsBuild`, `alsoWouldApply`, `unmatched`, `leaks` and `constraints`.
+
+What the run did not read is named, as paths relative to the project, in lists that are always
+present and empty when nothing was left out:
+
+| field | what it names |
+| --- | --- |
+| `totals.unreadSources.files` | source files the scan was refused |
+| `totals.unreadSources.directories` | directories the scan was refused |
+| `totals.unreadSources.links` | links leading outside the project, which the scan does not follow |
+| `totals.skippedLinks` | links under the app directory the route walk did not follow |
+| `totals.modulesHeldUnread` | files holding a module of Next.js whole in a form whose uses were not read |
+
+Each entry of `totals.skippedLinks` carries the `path` and where it `leads`: `outside` the app
+directory, `back` to a directory holding it, or to a `file` where a convention was expected. An
+entry reporting nothing is a different fact when one of these lists is not empty.
+An export of a Next.js module is read through a named import, off a namespace, and off
+`await import()`. A file that hands the namespace on, indexes it by a computed name or passes the
+promise to `then` is listed in `totals.modulesHeldUnread` with its `path` and the `modules` it
+holds that way, because an entry reported as unused may be used there and a tag reported with no
+counterpart may have it there. `weights.ordering.unreadableEntries` counts the entries of the build's recorded figures written in
+a shape this tool does not read.
 
 **Every channel the terminal report prints has a field here**, and the other way round.
 `constraints.checked` matters most when `contradicted` is zero: it separates a project found clean

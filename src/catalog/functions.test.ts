@@ -136,6 +136,38 @@ describe("import-anchored detection", () => {
   });
 });
 
+describe("detection off a module held whole", () => {
+  const usedIn = (contents: string, id: string, title: string) =>
+    predicateFor(id).detectUsed(project({ "app/a.ts": contents }), surface(id, title)).matched;
+
+  it("should count a symbol called off a namespace", () => {
+    const contents =
+      "import * as nav from 'next/navigation'\nexport const a = () => nav.redirect('/')\n";
+    expect(usedIn(contents, "functions/redirect", "redirect")).toBe(true);
+  });
+
+  it("should count a symbol taken off an awaited import", () => {
+    const contents =
+      "export async function a() {\n" +
+      "  const { cookies } = await import('next/headers')\n" +
+      "  return cookies()\n" +
+      "}\n";
+    expect(usedIn(contents, "functions/cookies", "cookies")).toBe(true);
+  });
+
+  it("should not count a symbol the namespace is never asked for", () => {
+    const contents =
+      "import * as nav from 'next/navigation'\nexport const a = () => nav.notFound()\n";
+    expect(usedIn(contents, "functions/redirect", "redirect")).toBe(false);
+  });
+
+  it("should not count a module held in a form whose uses were not read", () => {
+    // Named in the report instead: a use that was not read is not a use that was found.
+    const contents = "import * as nav from 'next/navigation'\nexport const a = () => run(nav)\n";
+    expect(usedIn(contents, "functions/redirect", "redirect")).toBe(false);
+  });
+});
+
 describe("exported convention detection", () => {
   it("should count a generate function exported from a route file", () => {
     const context = project({
@@ -319,6 +351,23 @@ describe("single-file would-apply conditions", () => {
     const context = project({
       "app/a.ts": "'use cache'\nimport { cacheLife } from 'next/cache'\ncacheLife('hours')\n",
     });
+    const verdict = predicateFor("functions/cacheLife").wouldApply?.(
+      context,
+      surface("functions/cacheLife", "cacheLife"),
+    );
+    expect(verdict?.matched).toBe(false);
+  });
+
+  it.each([
+    ["calls it off a namespace", "import * as cache from 'next/cache'\ncache.cacheLife('hours')\n"],
+    [
+      "takes it off an awaited import",
+      "export async function a() {\n  const { cacheLife } = await import('next/cache')\n  cacheLife('hours')\n}\n",
+    ],
+    // Not read, so not known to be missing: the report names the file and the suggestion is not owed.
+    ["hands the module on unread", "import * as cache from 'next/cache'\nrun(cache)\n"],
+  ])("should stay silent when the cache scope %s", (_, contents) => {
+    const context = project({ "app/a.ts": `'use cache'\n${contents}` });
     const verdict = predicateFor("functions/cacheLife").wouldApply?.(
       context,
       surface("functions/cacheLife", "cacheLife"),

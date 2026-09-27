@@ -20,6 +20,43 @@ function configOf(source: string) {
 
 const BODY = "const nextConfig = { typedRoutes: true, experimental: { taint: true } };";
 
+describe("a config that does not parse", () => {
+  /**
+   * The defect this exists for. The parser recovers from the missing comma and returns a tree
+   * holding both options, so the file read as a config declaring them — one Next.js cannot load.
+   */
+  it("should refuse a file the parser only recovered from", () => {
+    const config = configOf(
+      "export default {\n  typedRoutes: true\n  experimental: { taint: true },\n};\n",
+    );
+    const flag = readFlag(config, "typedRoutes");
+    expect(flag.status).toBe("unresolved");
+    if (flag.status === "unresolved") {
+      expect(flag.reason).toContain("next.config has a syntax error: ',' expected at line 3");
+    }
+  });
+
+  it("should refuse every option of it, not only the one beside the error", () => {
+    const config = configOf(
+      "export default {\n  typedRoutes: true\n  experimental: { taint: true },\n};\n",
+    );
+    expect(readFlag(config, "experimental.taint").status).toBe("unresolved");
+  });
+
+  it("should still read a config that parses", () => {
+    const config = configOf("export default {\n  typedRoutes: true,\n};\n");
+    expect(readFlag(config, "typedRoutes")).toEqual({ status: "resolved", value: true });
+  });
+
+  /** Type syntax is not an error in the file that may carry it. */
+  it("should not take type syntax in a TypeScript config for an error", () => {
+    const config = configOf(
+      'import type { NextConfig } from "next";\nconst c: NextConfig = { typedRoutes: true };\nexport default c satisfies NextConfig;\n',
+    );
+    expect(readFlag(config, "typedRoutes")).toEqual({ status: "resolved", value: true });
+  });
+});
+
 describe("plugin wrappers", () => {
   it("should read a config wrapped by a single plugin", () => {
     const config = configOf(`${BODY}\nexport default withMDX(nextConfig);\n`);

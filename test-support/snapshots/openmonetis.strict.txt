@@ -224,7 +224,7 @@ used file-conventions/loading (20)
     src/app/(dashboard)/settings/page.tsx
     src/app/(landing-page)/page.tsx
 not-applicable file-conventions/mdx-components
-used file-conventions/metadata/app-icons (1)
+used file-conventions/metadata/app-icons (2)
 used file-conventions/metadata/manifest (1)
 would-apply file-conventions/metadata/opengraph-image
   src/app/(landing-page)/layout.tsx
@@ -274,6 +274,7 @@ not-evaluated functions/generate-viewport
 used functions/headers (6)
 would-apply functions/image-response
   src/app/apple-icon.png
+  src/app/icon1.png
 not-evaluated functions/io
 used functions/next-request (1)
   also would apply

@@ -4,8 +4,15 @@ import ts from "typescript";
 export type CallArgument = { readonly literal: string } | "unresolved";
 
 export type CallRecord = {
-  /** The local name at the call site, resolved to its import by the ledger. */
+  /**
+   * The local name at the call site, resolved to its import by the ledger. The namespace where
+   * `member` is set, and the exported name itself where `from` is.
+   */
   readonly callee: string;
+  /** The export called off a namespace: `revalidateTag` in `cache.revalidateTag()`. */
+  readonly member?: string;
+  /** The module, where the call is made on the import itself and binds no name. */
+  readonly from?: string;
   readonly args: readonly CallArgument[];
   /**
    * Tags carried by an options argument rather than by a positional one. Kept apart from `args`
@@ -174,4 +181,88 @@ export function importedLocalNames(source: ts.SourceFile): Set<string> {
     }
   }
   return locals;
+}
+
+function withoutParentheses(node: ts.Expression): ts.Expression {
+  return ts.isParenthesizedExpression(node) ? withoutParentheses(node.expression) : node;
+}
+
+/**
+ * `await import('module')`, with the call and the module it names. Only the awaited form with a
+ * literal specifier: what a promise is handed to, or what a computed specifier names, is not
+ * something one file settles.
+ */
+export function awaitedImportOf(
+  node: ts.Expression | undefined,
+): { readonly call: ts.CallExpression; readonly specifier: string } | undefined {
+  if (node === undefined) return undefined;
+  const awaited = withoutParentheses(node);
+  if (!ts.isAwaitExpression(awaited)) return undefined;
+  const call = withoutParentheses(awaited.expression);
+  if (!ts.isCallExpression(call) || call.expression.kind !== ts.SyntaxKind.ImportKeyword) {
+    return undefined;
+  }
+  const [specifier] = call.arguments;
+  return specifier !== undefined && ts.isStringLiteral(specifier)
+    ? { call, specifier: specifier.text }
+    : undefined;
+}
+
+/**
+ * The names a declaration takes off a module it was handed whole: `{ a, b: c }` binds two exports,
+ * and a plain name binds the namespace. `unread` says the pattern holds something that names no
+ * export — a rest element, a nested pattern, a computed key.
+ */
+export function namesTakenBy(name: ts.BindingName): {
+  readonly bound: readonly { readonly imported: string; readonly local: string }[];
+  readonly unread: boolean;
+} {
+  if (ts.isIdentifier(name)) return { bound: [{ imported: "*", local: name.text }], unread: false };
+  if (!ts.isObjectBindingPattern(name)) return { bound: [], unread: true };
+  const bound: { imported: string; local: string }[] = [];
+  let unread = false;
+  for (const element of name.elements) {
+    const key = element.propertyName ?? element.name;
+    const named = ts.isIdentifier(key) || ts.isStringLiteral(key);
+    if (element.dotDotDotToken !== undefined || !ts.isIdentifier(element.name) || !named) {
+      unread = true;
+      continue;
+    }
+    bound.push({ imported: key.text, local: element.name.text });
+  }
+  return { bound, unread };
+}
+
+/** The namespaces a file imports as values, by local name, with the module each one is. */
+export function importedNamespaces(source: ts.SourceFile): Map<string, string> {
+  const namespaces = new Map<string, string>();
+  for (const statement of source.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
+      continue;
+    }
+    const clause = statement.importClause;
+    const named = clause?.namedBindings;
+    if (!clause || clause.isTypeOnly || !named || !ts.isNamespaceImport(named)) continue;
+    namespaces.set(named.name.text, statement.moduleSpecifier.text);
+  }
+  return namespaces;
+}
+
+/**
+ * Whether an identifier stands for the value of its name, rather than being the name of a member,
+ * a key or an attribute that happens to be spelled the same.
+ */
+export function standsForAValue(node: ts.Identifier, parent: ts.Node | undefined): boolean {
+  if (parent === undefined) return true;
+  if (ts.isNamespaceImport(parent)) return false;
+  if (ts.isPropertyAccessExpression(parent)) return parent.name !== node;
+  if (ts.isBindingElement(parent)) return parent.propertyName !== node;
+  if (ts.isJsxAttribute(parent)) return false;
+  const declaresAMember =
+    ts.isPropertyAssignment(parent) ||
+    ts.isPropertySignature(parent) ||
+    ts.isPropertyDeclaration(parent) ||
+    ts.isMethodSignature(parent) ||
+    ts.isMethodDeclaration(parent);
+  return !(declaresAMember && parent.name === node);
 }

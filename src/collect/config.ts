@@ -497,6 +497,31 @@ function importedObjectKeys(
   return keysByLocalName;
 }
 
+/**
+ * The first syntax error in the file, or nothing where it parses.
+ *
+ * Asked of the compiler because the tree cannot say: the parser recovers from an error and hands
+ * back a tree that reads as whole, so a config missing a comma between two options resolved with
+ * both of them and the report counted its constraints as checked. Next.js cannot load that file,
+ * and nothing it declares is in effect.
+ *
+ * Measured on 856 configs of real projects: one carries an error, a manifest pasted below the
+ * export, and it had been resolving with three options read.
+ */
+function syntaxErrorIn(source: ts.SourceFile): string | undefined {
+  const { diagnostics } = ts.transpileModule(source.text, {
+    fileName: source.fileName,
+    reportDiagnostics: true,
+    compilerOptions: { target: ts.ScriptTarget.Latest, module: ts.ModuleKind.ESNext },
+  });
+  const first = diagnostics?.[0];
+  if (first === undefined) return undefined;
+  const message = ts.flattenDiagnosticMessageText(first.messageText, " ").replace(/\.$/, "");
+  if (first.start === undefined) return message;
+  const { line } = source.getLineAndCharacterOfPosition(first.start);
+  return `${message} at line ${line + 1}`;
+}
+
 function readConfigObject(
   projectRoot: string,
 ):
@@ -511,6 +536,15 @@ function readConfigObject(
     ts.ScriptTarget.Latest,
     true,
   );
+
+  const syntaxError = syntaxErrorIn(source);
+  if (syntaxError !== undefined) {
+    return {
+      path: found,
+      source,
+      object: unresolved(`next.config has a syntax error: ${syntaxError}`),
+    };
+  }
 
   const defaultExport = findDefaultExport(source);
   if (!defaultExport) {

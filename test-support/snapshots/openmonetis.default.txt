@@ -137,7 +137,7 @@ used file-conventions/loading (20)
     src/app/(dashboard)/settings/page.tsx
     src/app/(landing-page)/page.tsx
 not-applicable file-conventions/mdx-components
-used file-conventions/metadata/app-icons (1)
+used file-conventions/metadata/app-icons (2)
 used file-conventions/metadata/manifest (1)
 would-apply file-conventions/metadata/opengraph-image
   src/app/(landing-page)/layout.tsx

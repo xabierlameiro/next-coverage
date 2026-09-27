@@ -37,10 +37,10 @@ const LAYOUT = "layout";
  * it inherits, because a layout renders around every route beneath it and its client imports ship
  * with them.
  */
-function pagesWithLayouts(tree: RouteTree): { node: RouteNode; page: string; entries: string[] }[] {
-  const found: { node: RouteNode; page: string; entries: string[] }[] = [];
+function pagesWithLayouts(tree: RouteTree): { url: string; page: string; entries: string[] }[] {
+  const found: { url: string; page: string; entries: string[] }[] = [];
 
-  const walk = (node: RouteNode, inherited: readonly string[]): void => {
+  const walk = (node: RouteNode, inherited: readonly string[], url: string): void => {
     const own = node.conventions
       .filter((c) => c.name === LAYOUT && c.skippedForFlag === undefined)
       .map((c) => c.file);
@@ -48,13 +48,28 @@ function pagesWithLayouts(tree: RouteTree): { node: RouteNode; page: string; ent
 
     for (const convention of node.conventions) {
       if (convention.name !== PAGE || convention.skippedForFlag !== undefined) continue;
-      found.push({ node, page: convention.file, entries: [convention.file, ...layouts] });
+      found.push({ url, page: convention.file, entries: [convention.file, ...layouts] });
     }
-    for (const child of node.children) walk(child, layouts);
+    for (const child of node.children) walk(child, layouts, urlBeneath(url, node, child));
   };
 
-  walk(tree.root, []);
+  walk(tree.root, [], tree.root.urlPath);
   return found;
+}
+
+/**
+ * The URL a route is filed under where no build says which: the one the tree derived, except from
+ * an interception down, where the marker is kept the way the build keeps it.
+ *
+ * The derived URL of an intercepting route is the one it answers on, which is the URL of the route
+ * it intercepts. Filed under it, the two were one row carrying the client code of both, and a
+ * project read without a build had a route weighing what two documents weigh.
+ */
+function urlBeneath(parentUrl: string, parent: RouteNode, child: RouteNode): string {
+  const marked = parentUrl !== parent.urlPath;
+  if (child.kind !== "intercepting" && !marked) return child.urlPath;
+  if (child.kind === "slot" || child.kind === "group") return parentUrl;
+  return parentUrl === "/" ? `/${child.dirName}` : `${parentUrl}/${child.dirName}`;
 }
 
 /**
@@ -76,7 +91,8 @@ export function buildWeights(
   const isTest = (path: string): boolean => index.byPath.get(path)?.isTest === true;
 
   // The build separates an intercepting route from the one it intercepts and this tool's derived
-  // path does not, so grouping by the build's URL keeps two different documents apart.
+  // path does not, so grouping by the build's URL keeps two different documents apart. Without a
+  // build, `urlBeneath` keeps them apart the same way.
   const urlByPage = new Map<string, string>();
   const filePathRouteByPage = new Map<string, string>();
   for (const route of join?.routes ?? []) {
@@ -87,8 +103,8 @@ export function buildWeights(
   type Row = { modules: Set<string>; filePathRoutes: string[]; entries: string[] };
   const byUrl = new Map<string, Row>();
 
-  for (const { node, page, entries } of pagesWithLayouts(tree)) {
-    const url = urlByPage.get(page) ?? node.urlPath;
+  for (const { url: derived, page, entries } of pagesWithLayouts(tree)) {
+    const url = urlByPage.get(page) ?? derived;
     const row = byUrl.get(url) ?? { modules: new Set(), filePathRoutes: [], entries: [] };
     for (const path of reach(entries)) {
       if (!isTest(path)) row.modules.add(path);
@@ -168,6 +184,11 @@ export type WeightContrast = {
   readonly compared: number;
   /** Routes with no recorded figure, which the build does not record for a handler. */
   readonly withoutFigure: number;
+  /**
+   * Entries of the build's record skipped for a shape this tool does not read. One of them may be
+   * the figure a route counted in `withoutFigure` did have.
+   */
+  readonly unreadableEntries: number;
   /** Every comparable route under both orderings, furthest apart first. */
   readonly ranked: readonly RankedRoute[];
   /** Those the two orderings place at different positions, furthest apart first. */
@@ -180,6 +201,7 @@ export const EMPTY_WEIGHT_CONTRAST: WeightContrast = {
   orderedPairs: 0,
   compared: 0,
   withoutFigure: 0,
+  unreadableEntries: 0,
   ranked: [],
   furthest: [],
   reason: "no build was read",
@@ -284,6 +306,7 @@ export function contrastWeights(
   report: WeightReport,
   bytesByUrl: ReadonlyMap<string, number>,
   reason?: string,
+  unreadableEntries = 0,
 ): WeightContrast {
   if (reason !== undefined) return { ...EMPTY_WEIGHT_CONTRAST, reason };
 
@@ -303,6 +326,7 @@ export function contrastWeights(
       orderedPairs: 0,
       compared: comparable.length,
       withoutFigure,
+      unreadableEntries,
       ranked: [],
       furthest: [],
       reason: "fewer than two routes carry both a module count and a recorded figure",
@@ -332,6 +356,7 @@ export function contrastWeights(
     orderedPairs: measured.orderedPairs,
     compared: comparable.length,
     withoutFigure,
+    unreadableEntries,
     ranked,
     furthest: ranked.filter((route) => route.gap > 0),
   };

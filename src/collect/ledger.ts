@@ -211,8 +211,10 @@ export function buildLedger(
   const paths = new Map<string, Set<string>>();
   let unresolved = 0;
 
+  // Every argument, not the first: `cacheTag('a', 'b')` produces both, and reading one reported
+  // an invalidation of the other as naming a tag nobody produces.
   for (const { file, call } of callsResolvedTo(sources, CACHE_MODULE, TAG_PRODUCER)) {
-    const { literals, unresolved: skipped } = literalsOf(call.args);
+    const { literals, unresolved: skipped } = tagsIn(call.args);
     unresolved += skipped;
     for (const tag of literals) addTo(produced, tag, file.path);
   }

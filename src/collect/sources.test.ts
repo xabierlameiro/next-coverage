@@ -1,6 +1,13 @@
-import { mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { WORKSPACE_FIXTURE } from "../../test-support/corpus.js";
 import {
@@ -9,9 +16,11 @@ import {
   filesImportingModule,
   findSourceFiles,
   foreignPackages,
+  frameworkModulesHeldUnread,
   hasDirective,
   linkedPackages,
   scanSources,
+  takesAsAValue,
   unversionedDirectories,
 } from "./sources.js";
 
@@ -141,6 +150,116 @@ describe("imports", () => {
     const [file] = scanSources(root).files;
     expect(file?.imports.get("next/link")?.[0]?.imported).toBe("default");
     expect(file?.imports.get("next/navigation")?.[0]?.imported).toBe("*");
+  });
+});
+
+describe("an export taken off a module held whole", () => {
+  const takes = (contents: string, module: string, imported: string) => {
+    const [file] = scanSources(syntheticProject({ "a.ts": contents })).files;
+    if (file === undefined) throw new Error("the synthetic project holds one file");
+    return takesAsAValue(file, module, imported);
+  };
+
+  it.each([
+    ["called off a namespace", "import * as nav from 'next/navigation'\nnav.redirect('/')\n"],
+    [
+      "taken off an awaited import",
+      "export async function a() {\n  const { redirect: go } = await import('next/navigation')\n  go('/')\n}\n",
+    ],
+    [
+      "called off the name an awaited import was given",
+      "export async function a() {\n  const nav = await import('next/navigation')\n  nav.redirect('/')\n}\n",
+    ],
+    [
+      "called on the awaited import itself",
+      "export async function a() {\n  ;(await import('next/navigation')).redirect('/')\n}\n",
+    ],
+  ])("should count an export %s", (_, contents) => {
+    expect(takes(contents, "next/navigation", "redirect")).toBe(true);
+  });
+
+  it("should not count an export the namespace is never asked for", () => {
+    const contents = "import * as nav from 'next/navigation'\nnav.notFound()\n";
+    expect(takes(contents, "next/navigation", "redirect")).toBe(false);
+  });
+
+  it("should not count a call off a namespace of another module", () => {
+    const contents = "import * as nav from './mine'\nnav.redirect('/')\n";
+    expect(takes(contents, "next/navigation", "redirect")).toBe(false);
+  });
+
+  it("should not count a bare call to another name bound from the module", () => {
+    const contents = "import { notFound } from 'next/navigation'\nnotFound()\n";
+    expect(takes(contents, "next/navigation", "redirect")).toBe(false);
+  });
+});
+
+describe("the framework modules held whole and not read", () => {
+  const heldIn = (files: Record<string, string>) => {
+    const root = realpathSync(syntheticProject(files));
+    return frameworkModulesHeldUnread(scanSources(root)).map((held) => ({
+      path: relative(root, held.path),
+      modules: held.modules,
+    }));
+  };
+
+  it.each([
+    ["handed on", "import * as cache from 'next/cache'\nexport const b = () => run(cache)\n"],
+    [
+      "indexed by a computed name",
+      "import * as cache from 'next/cache'\nexport const b = (n) => cache[n]('x')\n",
+    ],
+    [
+      "taken apart after the import",
+      "import * as cache from 'next/cache'\nconst { revalidateTag } = cache\nrevalidateTag('x')\n",
+    ],
+    [
+      "a promise handed to then",
+      "export const b = () => import('next/cache').then((cache) => cache.revalidateTag('x'))\n",
+    ],
+    [
+      "taken with a rest element",
+      "export async function b() {\n  const { ...all } = await import('next/cache')\n  all.revalidateTag('x')\n}\n",
+    ],
+  ])("should name the file where the module is %s", (_, contents) => {
+    expect(heldIn({ "app/b.ts": contents })).toEqual([
+      { path: join("app", "b.ts"), modules: ["next/cache"] },
+    ]);
+  });
+
+  it("should name a module of the framework other than the cache", () => {
+    const held = heldIn({
+      "app/a.ts": "import * as headers from 'next/headers'\nexport const a = () => run(headers)\n",
+    });
+    expect(held).toEqual([{ path: join("app", "a.ts"), modules: ["next/headers"] }]);
+  });
+
+  it("should name nothing where every use of the namespace was read", () => {
+    const held = heldIn({
+      "app/a.ts":
+        "import * as cache from 'next/cache'\n" +
+        "export const a = (store) => {\n" +
+        "  cache.cacheTag('x')\n" +
+        "  return fetch(store.cache, { cache: 'no-store' })\n" +
+        "}\n",
+    });
+    expect(held).toEqual([]);
+  });
+
+  it("should not take a namespace imported as a type for the module", () => {
+    const held = heldIn({
+      "app/a.ts": "import type * as cache from 'next/cache'\nexport type A = typeof cache\n",
+    });
+    expect(held).toEqual([]);
+  });
+
+  it("should not name a file for a module that is not the framework's", () => {
+    const held = heldIn({
+      "app/a.ts": "export const a = () => import('./heavy').then((m) => m.default)\n",
+      "app/b.ts": "export const b = () => import('nextjs-toploader').then((m) => m.default)\n",
+      "app/heavy.ts": "export default 1\n",
+    });
+    expect(held).toEqual([]);
   });
 });
 
@@ -1154,5 +1273,129 @@ describe("the vendored workspace fixture", () => {
     const page = index.byPath.get(join(app, "app", "page.tsx"));
     const reference = page?.moduleReferences.find((one) => one.specifier === "@vendored/datos");
     expect(reference?.resolution.kind).toBe("internal");
+  });
+});
+
+/**
+ * Permission bits stop nobody running as root and mean something else on Windows, so the failure
+ * these tests need cannot be produced there.
+ */
+const canRefuseARead = process.platform !== "win32" && process.getuid?.() !== 0;
+
+describe.skipIf(!canRefuseARead)("the source a scan found and could not open", () => {
+  const PAGE = "export default function P() { return null }\n";
+  const READS_COOKIES = 'import { cookies } from "next/headers";\nexport const c = cookies;\n';
+
+  it("should report nothing unread where every file opened", () => {
+    const root = syntheticProject({ "app/page.tsx": PAGE, "lib/session.ts": READS_COOKIES });
+    expect(scanSources(root).unread).toEqual({ files: [], directories: [], links: [] });
+  });
+
+  /**
+   * The defect this exists for: the file was dropped from the index and named nowhere, so the one
+   * place the project calls an API read as a project that never calls it.
+   */
+  it("should name a file it could not read instead of dropping it", () => {
+    const root = syntheticProject({ "app/page.tsx": PAGE, "lib/session.ts": READS_COOKIES });
+    chmodSync(join(root, "lib", "session.ts"), 0o000);
+    const index = scanSources(root);
+    expect(index.unread.files).toEqual([join("lib", "session.ts")]);
+    expect(index.unread.directories).toEqual([]);
+    expect(filesImporting(index, "next/headers", "cookies")).toEqual([]);
+    expect(index.files.map((file) => file.path)).toEqual([join(root, "app", "page.tsx")]);
+  });
+
+  it("should name a directory it could not list, which hides every file under it", () => {
+    const root = syntheticProject({ "app/page.tsx": PAGE, "lib/session.ts": READS_COOKIES });
+    chmodSync(join(root, "lib"), 0o000);
+    try {
+      const index = scanSources(root);
+      expect(index.unread.directories).toEqual(["lib"]);
+      expect(index.unread.files).toEqual([]);
+    } finally {
+      chmodSync(join(root, "lib"), 0o755);
+    }
+  });
+
+  it("should not count a directory the walk skips on purpose", () => {
+    const root = syntheticProject({
+      "app/page.tsx": PAGE,
+      "node_modules/dep/index.ts": "export const x = 1\n",
+    });
+    chmodSync(join(root, "node_modules"), 0o000);
+    try {
+      expect(scanSources(root).unread).toEqual({ files: [], directories: [], links: [] });
+    } finally {
+      chmodSync(join(root, "node_modules"), 0o755);
+    }
+  });
+
+  it("should leave the list of files found as it was", () => {
+    const root = syntheticProject({ "app/page.tsx": PAGE, "lib/session.ts": READS_COOKIES });
+    chmodSync(join(root, "lib", "session.ts"), 0o000);
+    const found = findSourceFiles(root).map((path) => path.slice(root.length + 1));
+    expect(found).toEqual([join("app", "page.tsx"), join("lib", "session.ts")]);
+  });
+});
+
+describe("the links a project holds", () => {
+  const PAGE = "export default function Page() {\n  return null;\n}\n";
+  const pathsOf = (root: string) =>
+    scanSources(root).files.map((file) => relative(root, file.path));
+
+  /** The route walk follows this link, so the tree held a route whose file was in no index. */
+  it("should read a linked directory under the path the project gave it", () => {
+    const root = syntheticProject({ "app/real/page.tsx": PAGE });
+    symlinkSync(join(root, "app", "real"), join(root, "app", "aliased"), "dir");
+    expect(pathsOf(root)).toEqual([
+      join("app", "aliased", "page.tsx"),
+      join("app", "real", "page.tsx"),
+    ]);
+  });
+
+  it("should read a linked file under the path the project gave it", () => {
+    const root = syntheticProject({ "lib/real.ts": "export const a = 1;\n" });
+    symlinkSync(join(root, "lib", "real.ts"), join(root, "lib", "linked.ts"), "file");
+    expect(pathsOf(root)).toEqual([join("lib", "linked.ts"), join("lib", "real.ts")]);
+  });
+
+  it("should not follow a link leading back to a directory holding it, and name nothing", () => {
+    const root = syntheticProject({ "lib/a.ts": "export const a = 1;\n" });
+    symlinkSync(root, join(root, "lib", "loop"), "dir");
+    const index = scanSources(root);
+    expect(pathsOf(root)).toEqual([join("lib", "a.ts")]);
+    expect(index.unread).toEqual({ files: [], directories: [], links: [] });
+  });
+
+  it("should name a link leading outside the project and read nothing behind it", () => {
+    const outside = syntheticProject({ "shared.ts": "export const a = 1;\n" });
+    const root = syntheticProject({ "lib/a.ts": "export const a = 1;\n" });
+    // Not `out`: the walk prunes a directory of that name before asking where it leads.
+    symlinkSync(outside, join(root, "lib", "elsewhere"), "dir");
+    symlinkSync(join(outside, "shared.ts"), join(root, "lib", "out.ts"), "file");
+    const index = scanSources(root);
+    expect(pathsOf(root)).toEqual([join("lib", "a.ts")]);
+    expect(index.unread.links).toEqual([join("lib", "elsewhere"), join("lib", "out.ts")]);
+  });
+
+  /** What the walk leaves out by name it leaves out by link too. */
+  it("should not read what it prunes because a link leads there", () => {
+    const root = syntheticProject({
+      "lib/a.ts": "export const a = 1;\n",
+      "node_modules/pkg/index.ts": "export const b = 1;\n",
+    });
+    symlinkSync(join(root, "node_modules", "pkg"), join(root, "lib", "vendored"), "dir");
+    const index = scanSources(root);
+    expect(pathsOf(root)).toEqual([join("lib", "a.ts")]);
+    expect(index.unread.links).toEqual([]);
+  });
+
+  it("should say nothing about a link leading nowhere or to something that is not source", () => {
+    const root = syntheticProject({ "lib/a.ts": "export const a = 1;\n", "notes.md": "notes\n" });
+    symlinkSync(join(root, "gone"), join(root, "lib", "gone.ts"), "file");
+    symlinkSync(join(root, "notes.md"), join(root, "lib", "notes.md"), "file");
+    const index = scanSources(root);
+    expect(pathsOf(root)).toEqual([join("lib", "a.ts")]);
+    expect(index.unread.links).toEqual([]);
   });
 });

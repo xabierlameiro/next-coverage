@@ -140,13 +140,18 @@ function cacheScopeReadingTheRequest(context: PredicateContext): Suggestion {
 }
 
 /**
- * The flag each directive waits on. Both cache scopes are inert without Cache Components, so an
+ * The flag each directive waits on. Every cache scope is inert without Cache Components, so an
  * entry gated here reports the flag rather than a verdict — the reader is told what to turn on,
  * not that the API was not evaluated.
+ *
+ * The remote scope is gated like the other two although it suggests nothing: its page asks for the
+ * flag in the same words, and ungated it reported the directive as used in a project where the
+ * two beside it said the flag was off.
  */
 const REQUIRED_FLAG: Readonly<Record<string, string>> = {
   "directives/use-cache": "cacheComponents",
   "directives/use-cache-private": "cacheComponents",
+  "directives/use-cache-remote": "cacheComponents",
 };
 
 const WOULD_APPLY: Readonly<Record<string, SuggestionPredicate>> = {

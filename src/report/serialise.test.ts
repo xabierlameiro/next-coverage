@@ -61,11 +61,14 @@ const BASE_RESULT: CoverageResult = {
   preset: "default",
   unmatchedDeclarations: 0,
   unresolvedValues: 0,
+  modulesHeldUnread: [],
   boundaryLeaks: 0,
   clientClosure: 0,
   clientReachedWithoutDeclaring: 0,
   placedElsewhere: {},
   unresolvedSpecifiers: 0,
+  unreadSources: { files: [], directories: [], links: [] },
+  skippedLinks: [],
   constraintsChecked: 8,
   constraintsContradicted: 8,
   constraintsWithoutEntry: 0,
@@ -112,6 +115,15 @@ describe("the client code each route carries", () => {
     const { ordering } = serialiseReport(result, OPTIONS).weights;
     expect(ordering.agreement).toBeNull();
     expect(ordering.reason).toBeTypeOf("string");
+  });
+
+  it("should carry the entries of the build's record nobody could read", () => {
+    const result: CoverageResult = {
+      ...BASE_RESULT,
+      weightContrast: { ...EMPTY_WEIGHT_CONTRAST, unreadableEntries: 2 },
+    };
+    expect(serialiseReport(result, OPTIONS).weights.ordering.unreadableEntries).toBe(2);
+    expect(serialiseReport(BASE_RESULT, OPTIONS).weights.ordering.unreadableEntries).toBe(0);
   });
 });
 
@@ -303,6 +315,66 @@ describe("the workspace packages a project links to", () => {
   it("should not change the schema version, because only a field was added", () => {
     const linked = { ...BASE_RESULT, linkedPackages: { scanned: 1, unmatched: 0 } };
     expect(serialiseReport(linked, OPTIONS).schemaVersion).toBe(SCHEMA_VERSION);
+  });
+});
+
+describe("the source a scan could not open", () => {
+  /** Present and empty rather than absent: three empty lists state that everything was read. */
+  it("should be present and empty where every file opened", () => {
+    expect(serialiseReport(BASE_RESULT, OPTIONS).totals.unreadSources).toEqual({
+      files: [],
+      directories: [],
+      links: [],
+    });
+  });
+
+  it("should carry the paths rather than a count", () => {
+    const unread = {
+      ...BASE_RESULT,
+      unreadSources: { files: ["lib/session.ts"], directories: ["vendor"], links: ["lib/out"] },
+    };
+    expect(serialiseReport(unread, OPTIONS).totals.unreadSources).toEqual({
+      files: ["lib/session.ts"],
+      directories: ["vendor"],
+      links: ["lib/out"],
+    });
+  });
+
+  it("should not change the schema version, because only a field was added", () => {
+    expect(serialiseReport(BASE_RESULT, OPTIONS).schemaVersion).toBe(SCHEMA_VERSION);
+  });
+});
+
+describe("the links the route walk did not follow", () => {
+  /** Present and empty rather than absent: an empty list states that every link was followed. */
+  it("should be present and empty where every link was followed", () => {
+    expect(serialiseReport(BASE_RESULT, OPTIONS).totals.skippedLinks).toEqual([]);
+  });
+
+  it("should carry each path and where it led rather than a count", () => {
+    const skipped = {
+      ...BASE_RESULT,
+      skippedLinks: [{ path: "app/shared", leads: "outside" as const }],
+    };
+    expect(serialiseReport(skipped, OPTIONS).totals.skippedLinks).toEqual([
+      { path: "app/shared", leads: "outside" },
+    ]);
+  });
+});
+
+describe("the files holding a module of the framework unread", () => {
+  it("should be present and empty where every use was read", () => {
+    expect(serialiseReport(BASE_RESULT, OPTIONS).totals.modulesHeldUnread).toEqual([]);
+  });
+
+  it("should carry each path with its modules rather than a count", () => {
+    const held = {
+      ...BASE_RESULT,
+      modulesHeldUnread: [{ path: "lib/tags.ts", modules: ["next/cache"] }],
+    };
+    expect(serialiseReport(held, OPTIONS).totals.modulesHeldUnread).toEqual([
+      { path: "lib/tags.ts", modules: ["next/cache"] },
+    ]);
   });
 });
 

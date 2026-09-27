@@ -49,7 +49,15 @@ export type TreeIssue =
     }
   | { readonly kind: "slot-without-default"; readonly slot: string; readonly directory: string }
   | { readonly kind: "casing-near-miss"; readonly file: string; readonly expected: string }
-  | { readonly kind: "skipped-symlink"; readonly directory: string };
+  | {
+      readonly kind: "skipped-symlink";
+      readonly directory: string;
+      /**
+       * Outside the app directory, back to a directory the walk was already inside, or to a file
+       * where a convention was expected.
+       */
+      readonly leads: "outside" | "back" | "file";
+    };
 
 export type RouteTree = {
   readonly root: RouteNode;
@@ -120,15 +128,18 @@ function safeReadDir(dir: string) {
  * `readdirSync` reports a symlink as a link, never as a directory, so links have to be
  * resolved explicitly. A link staying inside the app directory is a normal directory and
  * is traversed; one escaping it is recorded and skipped, never silently dropped.
+ *
+ * `real` is where the link leads, which the walk needs to tell a link leading back into the
+ * directories it is already inside from one leading somewhere new.
  */
 function resolveEntry(
   appDirectory: string,
   path: string,
-): { readonly traverse: boolean; readonly escaped: boolean } {
+): { readonly traverse: boolean; readonly escaped: boolean; readonly real?: string } {
   try {
     const real = realpathSync(path);
     if (relative(appDirectory, real).startsWith("..")) return { traverse: false, escaped: true };
-    return { traverse: statSync(real).isDirectory(), escaped: false };
+    return { traverse: statSync(real).isDirectory(), escaped: false, real };
   } catch {
     return { traverse: false, escaped: false };
   }
@@ -141,6 +152,8 @@ function buildNode(
   options: BuildOptions,
   nodes: RouteNode[],
   issues: TreeIssue[],
+  /** Where each directory the walk is inside of really is, this one last. */
+  inside: readonly string[],
 ): RouteNode {
   const { kind, segment, depth } = classify(dirName);
   const urlPath = kind === "group" || kind === "slot" ? parentUrl : joinUrl(parentUrl, segment);
@@ -160,15 +173,33 @@ function buildNode(
     if (entry.isDirectory() || entry.isSymbolicLink()) {
       // Private folders are excluded from routing, and their contents are not scanned.
       if (entry.name.startsWith("_")) continue;
-      if (entry.isSymbolicLink()) {
-        const link = resolveEntry(options.appDirectory, full);
+      const link = entry.isSymbolicLink() ? resolveEntry(options.appDirectory, full) : undefined;
+      if (link !== undefined) {
         if (link.escaped) {
-          issues.push({ kind: "skipped-symlink", directory: full });
+          issues.push({ kind: "skipped-symlink", directory: full, leads: "outside" });
           continue;
         }
-        if (!link.traverse) continue;
+        if (!link.traverse) {
+          // A convention that is a link to a file is a route the project serves, and the scan
+          // reads that file only where it really is. Named, because the segment is then missing
+          // from the tree. A link to anything else is a colocated file, and one leading nowhere
+          // has nothing behind it.
+          const convention = conventionOf(entry.name, options.pageExtensions);
+          if (link.real !== undefined && convention && !convention.casingMismatch) {
+            issues.push({ kind: "skipped-symlink", directory: full, leads: "file" });
+          }
+          continue;
+        }
       }
-      const child = buildNode(full, entry.name, urlPath, options, nodes, issues);
+      const real = link?.real ?? join(inside.at(-1) ?? directory, entry.name);
+      // A link leading to a directory the walk is already inside has no end: `loop -> .` was
+      // followed until the path outgrew what the filesystem accepts, which left some two hundred
+      // routes nobody wrote and said nothing. Recorded like the link that escapes, and skipped.
+      if (inside.includes(real)) {
+        issues.push({ kind: "skipped-symlink", directory: full, leads: "back" });
+        continue;
+      }
+      const child = buildNode(full, entry.name, urlPath, options, nodes, issues, [...inside, real]);
       children.push(child);
       continue;
     }
@@ -254,6 +285,7 @@ export function buildRouteTree(options: BuildOptions): RouteTree {
     { ...options, appDirectory: boundary },
     nodes,
     issues,
+    [boundary],
   );
   for (const [urlPath, directories] of pagesByUrl(root, new Map())) {
     if (directories.length > 1) {

@@ -1,6 +1,7 @@
 import type { ElsewhereSignal, MissingPackage } from "../collect/sources.js";
 import type { StopReason } from "../types.js";
-import type { ClassifiedEntry, CoverageResult } from "./classify.js";
+import type { ClassifiedEntry, CoverageResult, SkippedLink } from "./classify.js";
+import { spellingControls } from "./control-characters.js";
 
 export type RenderOptions = {
   readonly colour: boolean;
@@ -432,6 +433,17 @@ function renderWeights(result: CoverageResult, options: RenderOptions): string[]
     lines.push(`  ${paint(rest, DIM, options.colour)}`);
   }
 
+  // Before either ending of the section: a record half-read is said whether or not what was
+  // read of it was enough to contrast.
+  if (weightContrast.unreadableEntries > 0) {
+    const note = plural(
+      weightContrast.unreadableEntries,
+      "entry of the build's recorded figures was written in a shape this tool does not read",
+      "entries of the build's recorded figures were written in a shape this tool does not read",
+    );
+    lines.push(`  ${paint(note, DIM, options.colour)}`);
+  }
+
   if (weightContrast.agreement === undefined) {
     const reason = weightContrast.reason ?? "no ordering was contrasted";
     lines.push(`  ${paint(`no ordering contrasted: ${reason}`, DIM, options.colour)}`);
@@ -444,7 +456,12 @@ function renderWeights(result: CoverageResult, options: RenderOptions): string[]
   //
   // It names the pairs rather than the routes because it is a proportion of pairs. Reading it as
   // a proportion of routes overstates what was counted, and the earlier wording invited that.
-  const percent = Math.round(weightContrast.agreement * 100);
+  //
+  // `agreement` is concordant less discordant over the pairs, so it runs from -1 to 1 and is not
+  // the share the sentence states. Every ordered pair is one or the other, which makes the share
+  // of concordant ones half of it plus a half. Printed as it came, 0.84 read as 84% of the pairs
+  // where 92% agree, and two orderings exactly reversed agreed on -100% of them.
+  const percent = Math.round(((weightContrast.agreement + 1) / 2) * 100);
   const summary = `this tool's ordering agrees with the build's on ${percent}% of the ${plural(weightContrast.orderedPairs, "route pair", "route pairs")} both orderings place, across ${plural(weightContrast.compared, "route", "routes")}`;
   lines.push(`  ${paint(summary, DIM, options.colour)}`);
   // What the figure cannot say on its own: a pair counts the same whether the two routes differ
@@ -472,7 +489,10 @@ function renderWeights(result: CoverageResult, options: RenderOptions): string[]
 }
 
 /** Describes the surface. It never scores, warns or fails. */
-export function renderReport(result: CoverageResult, options: RenderOptions): string {
+export function renderReport(analysed: CoverageResult, asked: RenderOptions): string {
+  // Both carry text the project wrote, the root it sits at among it.
+  const result = spellingControls(analysed);
+  const options = spellingControls(asked);
   const lines: string[] = [];
   lines.push("");
   lines.push(
@@ -531,6 +551,8 @@ export function renderReport(result: CoverageResult, options: RenderOptions): st
       `${plural(result.unresolvedValues, "value could", "values could")} not be read, so matching is not exhaustive`,
     );
   }
+  const held = modulesHeldUnreadNote(result.modulesHeldUnread);
+  if (held !== undefined) notes.push(held);
   if (result.clientClosure > 0) {
     notes.push(
       `${plural(result.clientClosure, "file is", "files are")} on the client side of the boundary, ${result.clientReachedWithoutDeclaring} of them without declaring it`,
@@ -573,6 +595,12 @@ export function renderReport(result: CoverageResult, options: RenderOptions): st
       `${plural(result.unresolvedSpecifiers, "import could", "imports could")} not be resolved, so that boundary is not exhaustive`,
     );
   }
+  const unread = unreadSourcesNote(result.unreadSources);
+  if (unread !== undefined) notes.push(unread);
+  const unfollowed = unfollowedLinksNote(result.unreadSources.links);
+  if (unfollowed !== undefined) notes.push(unfollowed);
+  const skipped = skippedLinksNote(result.skippedLinks);
+  if (skipped !== undefined) notes.push(skipped);
   const missing = missingPackagesNote(result.missingPackages);
   if (missing !== undefined) notes.push(missing);
   if (result.constraintsChecked > 0) {
@@ -721,7 +749,9 @@ export function hasFinding(entry: ClassifiedEntry): boolean {
  * it keeps beyond the findings is the disclosure of its own shortening: a view that shrinks
  * silently reports having found nothing and having barely looked as the same output.
  */
-export function renderFindings(result: CoverageResult, options: RenderOptions): string {
+export function renderFindings(analysed: CoverageResult, asked: RenderOptions): string {
+  const result = spellingControls(analysed);
+  const options = spellingControls(asked);
   const lines: string[] = [];
   lines.push("");
   lines.push(
@@ -780,6 +810,15 @@ export function renderFindings(result: CoverageResult, options: RenderOptions): 
       `${plural(result.linkedPackages.unmatched, "workspace dependency names", "workspace dependencies name")} no member of the workspace, so their code was not read`,
     );
   }
+  // Kept on the same ground: a file the scan could not open is code the run read less of.
+  const unread = unreadSourcesNote(result.unreadSources);
+  if (unread !== undefined) notes.push(unread);
+  const unfollowed = unfollowedLinksNote(result.unreadSources.links);
+  if (unfollowed !== undefined) notes.push(unfollowed);
+  const skipped = skippedLinksNote(result.skippedLinks);
+  if (skipped !== undefined) notes.push(skipped);
+  const held = modulesHeldUnreadNote(result.modulesHeldUnread);
+  if (held !== undefined) notes.push(held);
   // Kept from the full report's footer because it is the one disclosure about something the run
   // deliberately did not do. Dropping it here would let a preset hide suggestions behind a flag.
   if (result.withheldHeuristics > 0) {
@@ -861,7 +900,8 @@ function offeredApps(apps: readonly { readonly directory: string; readonly decla
   };
 }
 
-export function renderStop(reason: StopReason, colour: boolean): string {
+export function renderStop(stopped: StopReason, colour: boolean): string {
+  const reason = spellingControls(stopped);
   const text = ((): string => {
     switch (reason.kind) {
       case "no-project":
@@ -924,6 +964,78 @@ function missingPackagesNote(packages: readonly MissingPackage[]): string | unde
     `${plural(packages.length, "package that is", "packages that are")} ` +
     `not installed — ${named}${rest} — ${declaredPart}`
   );
+}
+
+/**
+ * The source the scan found and could not open, named.
+ *
+ * It says what the failure costs rather than only that it happened: an entry reporting nothing is
+ * a statement about the files that were read, and these were not among them.
+ */
+function unreadSourcesNote(unread: CoverageResult["unreadSources"]): string | undefined {
+  const paths = [...unread.files, ...unread.directories];
+  if (paths.length === 0) return undefined;
+  const counted = [
+    { count: unread.files.length, one: "source file", many: "source files" },
+    { count: unread.directories.length, one: "directory", many: "directories" },
+  ]
+    .filter((part) => part.count > 0)
+    .map((part) => plural(part.count, part.one, part.many))
+    .join(" and ");
+  const named = paths.slice(0, 3).join(", ");
+  const rest = paths.length > 3 ? ` and ${paths.length - 3} more` : "";
+  return `${counted} could not be read — ${named}${rest} — so an entry reporting nothing may be used there`;
+}
+
+/**
+ * The links the route walk did not follow, named, each with where it led.
+ *
+ * A route reached through one is in no figure of the report, and nothing else in it says so: the
+ * source behind a link may well have been read, which is why this is not the note above.
+ */
+/**
+ * The links leading outside the project, which the scan did not follow, named.
+ *
+ * Apart from the note above because nothing failed: the scan reads the project, and what these
+ * lead to is somewhere else. The cost is the same one, so it is stated the same way.
+ */
+function unfollowedLinksNote(links: readonly string[]): string | undefined {
+  if (links.length === 0) return undefined;
+  const named = links.slice(0, 3).join(", ");
+  const rest = links.length > 3 ? ` and ${links.length - 3} more` : "";
+  return `${plural(links.length, "link leads outside the project and was", "links lead outside the project and were")} not followed — ${named}${rest} — so an entry reporting nothing may be used there`;
+}
+
+/**
+ * The files holding a module of the framework in a form whose uses were not read, named.
+ *
+ * An entry reporting nothing, and a tag with no counterpart, are statements about the uses that
+ * were read. A file handing the module on, or reaching it through a promise, cannot be asked.
+ */
+function modulesHeldUnreadNote(held: CoverageResult["modulesHeldUnread"]): string | undefined {
+  if (held.length === 0) return undefined;
+  const named = held
+    .slice(0, 3)
+    .map((file) => `${file.path} (${file.modules.join(", ")})`)
+    .join(", ");
+  const rest = held.length > 3 ? ` and ${held.length - 3} more` : "";
+  return `${plural(held.length, "file holds", "files hold")} a module of Next.js whole, in a form whose uses were not read — ${named}${rest} — so an entry reported as unused may be used there, and a tag with no counterpart may have it there`;
+}
+
+const WHERE_A_LINK_LED: Readonly<Record<SkippedLink["leads"], string>> = {
+  outside: "leads outside the app directory",
+  back: "leads back to a directory holding it",
+  file: "leads to a file",
+};
+
+function skippedLinksNote(skipped: CoverageResult["skippedLinks"]): string | undefined {
+  if (skipped.length === 0) return undefined;
+  const named = skipped
+    .slice(0, 3)
+    .map((link) => `${link.path} (${WHERE_A_LINK_LED[link.leads]})`)
+    .join(", ");
+  const rest = skipped.length > 3 ? ` and ${skipped.length - 3} more` : "";
+  return `${plural(skipped.length, "link under the app directory was", "links under the app directory were")} not followed — ${named}${rest} — so a route reached through one is not in this report`;
 }
 
 function silenceBreakdown(result: CoverageResult): string {

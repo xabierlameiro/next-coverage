@@ -23,7 +23,7 @@ export const FLAG_GATED_CONVENTIONS = {
   "global-not-found": "experimental.globalNotFound",
 } as const;
 
-/** Metadata files are matched by their own extensions, not by `pageExtensions`. */
+/** Metadata files are matched by their own extensions as well as by `pageExtensions`. */
 export const METADATA_CONVENTIONS = [
   "sitemap",
   "robots",
@@ -45,8 +45,49 @@ const ALL_CONVENTIONS: readonly string[] = [
   ...METADATA_CONVENTIONS,
 ];
 
+/**
+ * The extensions a metadata file may have when it is a file and not code, as Next.js lists them in
+ * `lib/metadata/is-metadata-route`. Any extension used to count, so a `sitemap.txt` was a
+ * convention here and nothing to the framework.
+ */
+const STATIC_METADATA_EXTENSIONS: Readonly<Record<MetadataConvention, readonly string[]>> = {
+  sitemap: ["xml"],
+  robots: ["txt"],
+  manifest: ["webmanifest", "json"],
+  icon: ["ico", "jpg", "jpeg", "png", "svg"],
+  "apple-icon": ["jpg", "jpeg", "png"],
+  "opengraph-image": ["jpg", "jpeg", "png", "gif"],
+  "twitter-image": ["jpg", "jpeg", "png", "gif"],
+};
+
+/** The image conventions take one digit after the name, so a segment can hold `icon1` and `icon2`. */
+const NUMBERED_CONVENTIONS: readonly string[] = [
+  "icon",
+  "apple-icon",
+  "opengraph-image",
+  "twitter-image",
+];
+
 export function isConventionName(name: string): name is ConventionName {
   return ALL_CONVENTIONS.includes(name);
+}
+
+function isMetadataConvention(name: ConventionName): name is MetadataConvention {
+  return (METADATA_CONVENTIONS as readonly string[]).includes(name);
+}
+
+function conventionNamedBy(base: string): ConventionName | undefined {
+  if (isConventionName(base)) return base;
+  const unnumbered = base.replace(/\d$/, "");
+  return NUMBERED_CONVENTIONS.includes(unnumbered) && isConventionName(unnumbered)
+    ? unnumbered
+    : undefined;
+}
+
+function extensionsOf(name: ConventionName, pageExtensions: readonly string[]): readonly string[] {
+  return isMetadataConvention(name)
+    ? [...STATIC_METADATA_EXTENSIONS[name], ...pageExtensions]
+    : pageExtensions;
 }
 
 export function requiredFlagFor(name: ConventionName): string | undefined {
@@ -69,16 +110,15 @@ export function conventionOf(
   const base = fileName.slice(0, lastDot);
   const extension = fileName.slice(lastDot + 1);
 
-  if (isConventionName(base)) {
-    const isMetadata = (METADATA_CONVENTIONS as readonly string[]).includes(base);
-    if (isMetadata || pageExtensions.includes(extension)) {
-      return { name: base, casingMismatch: false };
-    }
-    return undefined;
+  const exact = conventionNamedBy(base);
+  if (exact !== undefined) {
+    return extensionsOf(exact, pageExtensions).includes(extension)
+      ? { name: exact, casingMismatch: false }
+      : undefined;
   }
 
-  const lowered = base.toLowerCase();
-  if (isConventionName(lowered) && pageExtensions.includes(extension)) {
+  const lowered = conventionNamedBy(base.toLowerCase());
+  if (lowered !== undefined && extensionsOf(lowered, pageExtensions).includes(extension)) {
     return { name: lowered, casingMismatch: true };
   }
   return undefined;

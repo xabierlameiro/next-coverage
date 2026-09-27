@@ -7,7 +7,7 @@ import { buildGraph } from "../src/collect/graph.js";
 import { EMPTY_JOIN } from "../src/collect/output.js";
 import { discoverProject } from "../src/collect/project.js";
 import { buildRouteTree } from "../src/collect/routes.js";
-import { scanSources } from "../src/collect/sources.js";
+import { type SourceIndex, scanSources } from "../src/collect/sources.js";
 import { DEFAULT_PAGE_EXTENSIONS, unresolved } from "../src/types.js";
 import { once } from "./fixtures.js";
 
@@ -69,8 +69,12 @@ export function fixtureContext(fixture: Vendored): PredicateContext {
 /**
  * The same context for any project root, vendored or referenced. Not cached: a caller reading a
  * referenced project once per suite wraps it in `once` itself.
+ *
+ * `scanned` is the scan of this same root where the caller already holds one. The scan is the
+ * expensive step, and the global setup ships one per referenced fixture: scanning again here cost
+ * a file most of its time limit before its first assertion ran.
  */
-export function projectContext(root: string): PredicateContext {
+export function projectContext(root: string, scanned?: SourceIndex): PredicateContext {
   const discovery = discoverProject(root);
   if (discovery.kind !== "ok") {
     throw new Error(`${root} did not resolve as a project: ${discovery.reason.kind}`);
@@ -80,7 +84,7 @@ export function projectContext(root: string): PredicateContext {
     const value = readFlag(project.config, flag);
     return value.status === "resolved" && value.value === true;
   };
-  const sources = scanSources(project.root);
+  const sources = scanned ?? scanSources(project.root);
   return {
     project,
     tree: buildRouteTree({

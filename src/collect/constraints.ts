@@ -770,7 +770,11 @@ export function buildMissingModules(
   }
 
   return modules.length === 0
-    ? { findings: [], checked: 1, unread: [] }
+    ? {
+        findings: [],
+        checked: 1,
+        unread: partlyRead("instrumentationClientInject", listed.value.skipped),
+      }
     : {
         findings: [
           {
@@ -1034,8 +1038,14 @@ export function buildUnprefixedAssets(
 
   const assets: { file: string; value: string }[] = [];
   for (const file of productionFiles(sources)) {
+    // By the name the file gave the import, not by the tag: a project's own `Image` component is
+    // not the one the instruction is about, and the framework's under another name is.
+    const images = (file.imports.get("next/image") ?? [])
+      .filter((binding) => binding.imported === "default" && !binding.typeOnly)
+      .map((binding) => binding.local);
+    if (images.length === 0) continue;
     for (const element of file.jsxElements) {
-      if (element.tag !== "Image") continue;
+      if (!images.includes(element.tag)) continue;
       const src = attributeLiteral(element, "src");
       // A computed source is unread, here as everywhere: the prefix may well be in the expression.
       if (src === undefined || !src.startsWith("/")) continue;
@@ -1094,6 +1104,23 @@ export function reasonNaming(option: string, reason: string): string {
   return reason.startsWith(`'${option}'`) ? reason : `'${option}' could not be read: ${reason}`;
 }
 
+/**
+ * The entries of a list that were not literals, where the ones that were gave no finding.
+ *
+ * A finding carries the count beside what it found. Without one the count had nowhere to go, and a
+ * list holding a single computed entry read as a list checked and found clean.
+ */
+function partlyRead(option: string, skipped: number): readonly UnreadReading[] {
+  if (skipped === 0) return [];
+  const entries = skipped === 1 ? "1 entry that is" : `${skipped} entries that are`;
+  return [
+    {
+      subject: option,
+      reason: `'${option}' holds ${entries} not a literal and ${skipped === 1 ? "was" : "were"} not checked`,
+    },
+  ];
+}
+
 export function buildRouteInterceptions(
   config: NextConfigSource | undefined,
   tree: RouteTree,
@@ -1127,7 +1154,10 @@ export function buildRouteInterceptions(
       .map((pattern) => ({ pattern, serves: served.get(pattern) }))
       .filter((pair): pair is { pattern: string; serves: string } => pair.serves !== undefined);
 
-    if (routes.length === 0) continue;
+    if (routes.length === 0) {
+      unread.push(...partlyRead(option, declared.value.skipped));
+      continue;
+    }
     findings.push({
       kind: "intercepted-route",
       entry,

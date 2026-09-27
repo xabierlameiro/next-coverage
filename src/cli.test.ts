@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { EXIT } from "./cli-args.js";
 
 const CLI = join(process.cwd(), "dist", "cli.js");
@@ -11,17 +11,14 @@ const CLI = join(process.cwd(), "dist", "cli.js");
  * Run against the built CLI rather than an exported function: the exit status, the stream a line
  * lands on and the `--version` the build inlines are all properties of the binary, and testing
  * around it would test something else.
+ *
+ * The build is the one `test-support/build-cli.ts` made before any worker started. Building again
+ * here emptied `dist/` under the other files running the binary at that moment.
  */
 function run(...args: readonly string[]) {
   const result = spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8" });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
-
-beforeAll(() => {
-  const built = spawnSync(join("node_modules", ".bin", "tsup"), [], { encoding: "utf8" });
-  if (built.status !== 0) throw new Error(`the build failed:\n${built.stderr}`);
-  if (!existsSync(CLI)) throw new Error(`the build produced no ${CLI}`);
-}, 120_000);
 
 describe("describing itself", () => {
   it("should print the version from the manifest and analyse nothing", () => {

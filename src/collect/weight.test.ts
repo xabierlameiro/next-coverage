@@ -82,6 +82,43 @@ describe("per-route attribution", () => {
     expect(rowFor(report, "/panel")?.modules.size).toBe(1);
   });
 
+  it("should keep an intercepting route apart from the one it intercepts", () => {
+    const { report, at } = weightsOf({
+      "app/photo/[id]/page.tsx": "import { v } from '../../../viewer'\nexport default () => v\n",
+      "app/@modal/(.)photo/[id]/page.tsx":
+        "import { d } from '../../../../dialog'\nexport default () => d\n",
+      "app/@modal/default.tsx": PAGE,
+      "viewer.tsx": `${CLIENT}export const v = 1\n`,
+      "dialog.tsx": `${CLIENT}export const d = 1\n`,
+    });
+    expect([...(rowFor(report, "/photo/[id]")?.modules ?? [])]).toEqual([at("viewer.tsx")]);
+    expect([...(rowFor(report, "/(.)photo/[id]")?.modules ?? [])]).toEqual([at("dialog.tsx")]);
+  });
+
+  it("should write an interception the way the build does, from where it sits", () => {
+    const { report } = weightsOf({
+      "app/feed/page.tsx": PAGE,
+      "app/feed/@modal/(..)photo/(wide)/[id]/page.tsx": PAGE,
+      "app/feed/@modal/default.tsx": PAGE,
+      "app/photo/[id]/page.tsx": PAGE,
+    });
+    expect(report.routes.map((route) => route.url).sort()).toEqual([
+      "/feed",
+      "/feed/(..)photo/[id]",
+      "/photo/[id]",
+    ]);
+  });
+
+  it("should still file a slot's page under the URL it renders on", () => {
+    const { report, at } = weightsOf({
+      "app/page.tsx": PAGE,
+      "app/@side/page.tsx": "import { w } from '../../widget'\nexport default () => w\n",
+      "widget.tsx": `${CLIENT}export const w = 1\n`,
+    });
+    expect(report.routes.map((route) => route.url)).toEqual(["/"]);
+    expect([...(rowFor(report, "/")?.modules ?? [])]).toEqual([at("widget.tsx")]);
+  });
+
   it("reports a route with no client code rather than omitting it", () => {
     const { report } = weightsOf({ "app/panel/page.tsx": PAGE });
     expect(rowFor(report, "/panel")).toBeDefined();
@@ -242,6 +279,20 @@ describe("contrasting the two orderings", () => {
     expect(contrast.compared).toBe(2);
     expect(contrast.withoutFigure).toBe(1);
     expect(contrast.reason).toBeUndefined();
+  });
+
+  it("should carry the entries of the record nobody could read", () => {
+    const figures = new Map([
+      ["/a", 300],
+      ["/b", 200],
+    ]);
+    const routes = reportOf([
+      ["/a", 3],
+      ["/b", 2],
+    ]);
+    expect(contrastWeights(routes, figures, undefined, 2).unreadableEntries).toBe(2);
+    expect(contrastWeights(routes, new Map(), undefined, 2).unreadableEntries).toBe(2);
+    expect(contrastWeights(routes, figures).unreadableEntries).toBe(0);
   });
 
   it("gives no agreement when fewer than two routes are comparable", () => {

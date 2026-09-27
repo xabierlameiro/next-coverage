@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fixtureContext, projectContext, VENDORED } from "../../test-support/corpus.js";
-import { FIXTURES, fixtureAvailable, once } from "../../test-support/fixtures.js";
+import { FIXTURES, fixtureAvailable, once, sharedSources } from "../../test-support/fixtures.js";
 import type { SurfaceEntry } from "../collect/docs.js";
 import type { ModuleGraph } from "../collect/graph.js";
 import { ALL_PREDICATES } from "./build.js";
@@ -28,7 +28,9 @@ function contexts(): readonly Named[] {
     ...VENDORED.map((name) => ({ name, context: fixtureContext(name) })),
     ...FIXTURES.filter(fixtureAvailable).map((fixture) => ({
       name: fixture.name,
-      context: once(`${fixture.name}-predicate-context`, () => projectContext(fixture.path)),
+      context: once(`${fixture.name}-predicate-context`, () =>
+        projectContext(fixture.path, sharedSources(fixture)),
+      ),
     })),
   ];
 }

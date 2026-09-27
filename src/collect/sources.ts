@@ -1,16 +1,20 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import ts from "typescript";
 import {
   argumentsOf,
+  awaitedImportOf,
   type CallArgument,
   type CallRecord,
   fetchCacheOf,
   fetchTagsOf,
   fileConstants,
   importedLocalNames,
+  importedNamespaces,
   literalArgument,
+  namesTakenBy,
   optionTagsOf,
+  standsForAValue,
 } from "./calls.js";
 import { type ClientDirectiveReasons, clientDirectiveReasons } from "./client-reasons.js";
 import { unversionedDirectories } from "./ignored.js";
@@ -237,6 +241,18 @@ export type SourceFileRecord = {
   /** Directives inside a function body, which scope to that function only. */
   readonly functionDirectives: readonly string[];
   readonly imports: ReadonlyMap<string, readonly ImportBinding[]>;
+  /**
+   * The names a declaration takes off `await import('module')`, keyed like `imports`. Kept apart
+   * from it: whether a file imports a module is asked of `imports` by readers that mean the
+   * declaration at the top of the file, and these are not that.
+   */
+  readonly awaitedImports: ReadonlyMap<string, readonly ImportBinding[]>;
+  /**
+   * The modules this file holds whole, as a namespace or through `import()`, and uses in a form
+   * whose calls are not read: handed on, indexed by a computed name, or a promise never awaited
+   * in place. A reader matching calls to one of these has not seen every call the file makes.
+   */
+  readonly modulesHeldUnread: readonly string[];
   /** Every module this file references, in source order, with where each specifier resolved to. */
   readonly moduleReferences: readonly ModuleReference[];
   readonly exportedNames: readonly string[];
@@ -316,7 +332,10 @@ export type SourceFileRecord = {
    * here and a call there reports a scope that does neither.
    */
   readonly cacheScopes: readonly CacheScopeRecord[];
-  /** Calls to bare identifiers, with the arguments we were able to read. */
+  /**
+   * Calls to a name an import binds, to an export off a namespace, and to an export off
+   * `await import()`, with the arguments we were able to read.
+   */
   readonly calls: readonly CallRecord[];
   /** Tags carried by the `next` option of a fetch call, in declaration order. */
   readonly fetchTags: readonly CallArgument[];
@@ -474,6 +493,18 @@ export type SourceIndex = {
     /** Named as a workspace dependency and matched by no member the declaration lists. */
     readonly unmatched: number;
   };
+  /**
+   * Source files and directories the walk found and could not open, relative to the root, and the
+   * links it found leading outside everything it reads, which it did not follow.
+   *
+   * Named rather than dropped: a file nobody read puts nothing in any detection, so an API the
+   * project calls only there would report exactly as one it never calls.
+   */
+  readonly unread: {
+    readonly files: readonly string[];
+    readonly directories: readonly string[];
+    readonly links: readonly string[];
+  };
 };
 
 function safeReadDir(dir: string) {
@@ -489,37 +520,120 @@ function isSourceFile(name: string): boolean {
   return SOURCE_EXTENSIONS.some((extension) => name.endsWith(extension));
 }
 
-export function findSourceFiles(root: string): string[] {
+/** Sorted so nothing built on a list depends on filesystem enumeration order. */
+function inCodeUnitOrder(paths: Iterable<string>): string[] {
+  return [...paths].sort((a, b) => (a === b ? 0 : a < b ? -1 : 1));
+}
+
+/** Where a path really is, or the path itself where that cannot be told. */
+function realOf(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
+}
+
+/** Where a link leads and whether that is a directory, or nothing for a link leading nowhere. */
+function whereItLeads(
+  path: string,
+): { readonly real: string; readonly directory: boolean } | undefined {
+  try {
+    const real = realpathSync(path);
+    return { real, directory: statSync(real).isDirectory() };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The source files under the root, the directories the walk reached and could not list, and the
+ * links it did not follow because they lead outside what it reads.
+ *
+ * A link is followed and read under the path the project gave it. The route walk follows a linked
+ * directory under `app/`, so a walk that read no link left a route in the tree whose files were in
+ * no index: every detection over that route answered from nothing and said so about the project.
+ */
+function walkSources(root: string): {
+  readonly files: string[];
+  readonly unreadDirectories: string[];
+  readonly unfollowedLinks: string[];
+} {
   const found: string[] = [];
+  const unreadDirectories = new Set<string>();
+  const unfollowedLinks = new Set<string>();
   const unversioned = unversionedDirectories(root);
   const foreign = foreignDirectories(root);
   const skipped = (name: string): boolean => SKIPPED_DIRECTORIES.has(name) || unversioned.has(name);
   const seen = new Set<string>();
-  const walk = (dir: string): void => {
-    for (const entry of safeReadDir(dir)) {
-      if (entry.isDirectory()) {
-        const path = join(dir, entry.name);
-        if (entry.name.startsWith(".") || skipped(entry.name) || foreign.has(path)) continue;
-        walk(path);
-        continue;
+  // Not `safeReadDir`: every directory reaching this was listed by its parent or is a root the
+  // project named, so one that cannot be listed holds code the scan never saw, not nothing.
+  const entriesOf = (dir: string) => {
+    try {
+      return readdirSync(dir, { withFileTypes: true });
+    } catch {
+      unreadDirectories.add(dir);
+      return [];
+    }
+  };
+  const linked = linkedPackages(root);
+  const read = [root, ...linked].map(realOf);
+  // Whether a link leads somewhere the walk reads, and nowhere it prunes on the way there: a link
+  // into `node_modules` names code the walk leaves out when it meets it by its own name.
+  const followed = (real: string): "follow" | "prune" | "outside" => {
+    const base = read.find((candidate) => !relative(candidate, real).startsWith(".."));
+    if (base === undefined) return "outside";
+    const pruned = relative(base, real)
+      .split(sep)
+      .some((name) => name.startsWith(".") || skipped(name));
+    return pruned || foreign.has(real) ? "prune" : "follow";
+  };
+  const pruned = (name: string, path: string): boolean =>
+    name.startsWith(".") || skipped(name) || foreign.has(path);
+  const walk = (dir: string, inside: readonly string[]): void => {
+    for (const entry of entriesOf(dir)) {
+      const path = join(dir, entry.name);
+      const link = entry.isSymbolicLink() ? whereItLeads(path) : undefined;
+      const isDirectory = link?.directory ?? entry.isDirectory();
+      const isSource = (link === undefined ? entry.isFile() : !link.directory)
+        ? isSourceFile(entry.name)
+        : false;
+      if (!isDirectory && !isSource) continue;
+      if (isDirectory && pruned(entry.name, path)) continue;
+      if (link !== undefined) {
+        const verdict = followed(link.real);
+        if (verdict === "outside") unfollowedLinks.add(path);
+        if (verdict !== "follow") continue;
       }
-      if (entry.isFile() && isSourceFile(entry.name)) {
-        const path = join(dir, entry.name);
+      if (isSource) {
         if (!seen.has(path)) {
           seen.add(path);
           found.push(path);
         }
+        continue;
       }
+      const real = link?.real ?? join(inside.at(-1) ?? dir, entry.name);
+      // A link leading to a directory the walk is inside of has no end. Nothing is lost by
+      // stopping: what it leads to is being read where it really is.
+      if (inside.includes(real)) continue;
+      walk(path, [...inside, real]);
     }
   };
-  walk(root);
+  walk(root, [realOf(root)]);
   // Each linked workspace member is a root of its own. Its files are this project's to read — an
   // app calling `cookies()` through a linked package is calling it — and a member outside the
   // project root is never reached by the walk above. The same pruning applies inside it, and a
   // member nested under the root is deduplicated rather than walked twice.
-  for (const linked of linkedPackages(root)) walk(linked);
-  // Sorted so the index never depends on filesystem enumeration order.
-  return found.sort((a, b) => (a === b ? 0 : a < b ? -1 : 1));
+  for (const member of linked) walk(member, [realOf(member)]);
+  return {
+    files: inCodeUnitOrder(found),
+    unreadDirectories: inCodeUnitOrder(unreadDirectories),
+    unfollowedLinks: inCodeUnitOrder(unfollowedLinks),
+  };
+}
+
+export function findSourceFiles(root: string): string[] {
+  return walkSources(root).files;
 }
 
 /**
@@ -1157,6 +1271,11 @@ function parseFile(path: string, resolve: Resolver, root: string): SourceFileRec
   const exportedObjectKeys = new Map<string, readonly string[]>();
   const calledIdentifiers = new Set<string>();
   const importedLocals = importedLocalNames(source);
+  const awaitedImports = new Map<string, ImportBinding[]>();
+  const namespaces = importedNamespaces(source);
+  const modulesHeldUnread = new Set<string>();
+  /** The nodes a reading below accounted for, so meeting one again is not a use nobody read. */
+  const accountedFor = new Set<ts.Node>();
   // Read before the walk, because a call can name a constant the file declares below it.
   const constants = fileConstants(source);
   const calls: CallRecord[] = [];
@@ -1187,6 +1306,31 @@ function parseFile(path: string, resolve: Resolver, root: string): SourceFileRec
   let plainFetchCalls = 0;
 
   const visit = (node: ts.Node, parent?: ts.Node): void => {
+    if (ts.isVariableDeclaration(node)) {
+      const awaited = awaitedImportOf(node.initializer);
+      if (awaited !== undefined) {
+        accountedFor.add(awaited.call);
+        accountedFor.add(node.name);
+        const taken = namesTakenBy(node.name);
+        if (taken.unread) modulesHeldUnread.add(awaited.specifier);
+        const held = awaitedImports.get(awaited.specifier) ?? [];
+        for (const { imported, local } of taken.bound) {
+          held.push({ imported, local, typeOnly: false });
+          if (imported === "*") namespaces.set(local, awaited.specifier);
+          else importedLocals.add(local);
+        }
+        awaitedImports.set(awaited.specifier, held);
+      }
+    }
+    // The name is looked up first: nearly every identifier of a file is not a namespace, and
+    // this runs on all of them.
+    if (namespaces.size > 0 && ts.isIdentifier(node)) {
+      const held = namespaces.get(node.text);
+      if (held !== undefined && !accountedFor.has(node) && standsForAValue(node, parent)) {
+        modulesHeldUnread.add(held);
+      }
+    }
+
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const specifier = node.moduleSpecifier.text;
       const existing = imports.get(specifier) ?? [];
@@ -1305,6 +1449,29 @@ function parseFile(path: string, resolve: Resolver, root: string): SourceFileRec
         const [specifier] = node.arguments;
         if (specifier && ts.isStringLiteral(specifier)) {
           reference(specifier.text, "dynamic", false);
+          if (!accountedFor.has(node)) modulesHeldUnread.add(specifier.text);
+        }
+      }
+      if (ts.isPropertyAccessExpression(node.expression)) {
+        const receiver = node.expression.expression;
+        const member = node.expression.name.text;
+        const awaited = awaitedImportOf(receiver);
+        if (awaited !== undefined) {
+          accountedFor.add(awaited.call);
+          calls.push({
+            callee: member,
+            from: awaited.specifier,
+            args: argumentsOf(node, constants),
+            optionTags: optionTagsOf(node, constants),
+          });
+        } else if (ts.isIdentifier(receiver) && namespaces.has(receiver.text)) {
+          accountedFor.add(receiver);
+          calls.push({
+            callee: receiver.text,
+            member,
+            args: argumentsOf(node, constants),
+            optionTags: optionTagsOf(node, constants),
+          });
         }
       }
       if (isExtendedFetch(node)) {
@@ -1331,7 +1498,8 @@ function parseFile(path: string, resolve: Resolver, root: string): SourceFileRec
       if (method !== undefined && MATCHERS.has(method)) matchesAValue = true;
       const redirected = redirectStatusOf(node);
       if (redirected !== undefined) statusValues.push(redirected);
-      // Only bare identifiers: the ledger anchors on import bindings, and a method call has none.
+      // Only bare identifiers here: a call off a namespace or off `await import()` is recorded
+      // above, and any other method call has no import binding for the ledger to anchor on.
       if (ts.isIdentifier(node.expression)) {
         const name = node.expression.text;
         calledIdentifiers.add(name);
@@ -1384,6 +1552,8 @@ function parseFile(path: string, resolve: Resolver, root: string): SourceFileRec
     fileDirectives,
     functionDirectives,
     imports,
+    awaitedImports,
+    modulesHeldUnread: [...modulesHeldUnread].sort(),
     moduleReferences,
     exportedNames,
     exportedTypeNames,
@@ -1487,10 +1657,15 @@ export function scanSources(root: string): SourceIndex {
   let unresolved = 0;
   let assets = 0;
   const missing = new Map<string, MissingPackage>();
+  const walked = walkSources(root);
+  const unreadFiles: string[] = [];
 
-  for (const path of findSourceFiles(root)) {
+  for (const path of walked.files) {
     const record = parseFile(path, resolve, root);
-    if (!record) continue;
+    if (!record) {
+      unreadFiles.push(path);
+      continue;
+    }
     files.push(record);
     byPath.set(path, record);
     for (const { resolution } of record.moduleReferences) {
@@ -1514,20 +1689,64 @@ export function scanSources(root: string): SourceIndex {
     byPath,
     resolution: { internal, external, unresolved, assets, missingPackages },
     linked: { scanned: linked.size, unmatched: unmatchedWorkspaceLinks(root, linked).length },
+    unread: {
+      files: inCodeUnitOrder(unreadFiles.map((path) => relative(root, path))),
+      // The root is relative to itself by the empty string, which names nothing.
+      directories: inCodeUnitOrder(
+        walked.unreadDirectories.map((path) => relative(root, path) || "."),
+      ),
+      links: inCodeUnitOrder(walked.unfollowedLinks.map((path) => relative(root, path))),
+    },
   };
 }
 
-/** Files importing `imported` from `module`, ignoring type-only imports. */
+/**
+ * Whether the file takes `imported` off `module` as a value: named in an import, taken off an
+ * awaited import, or called off the module held whole. A type-only import is not one.
+ *
+ * One definition, because the forms are one fact. A reader that knew the first form alone said a
+ * project did not use `cookies` while it wrote `const { cookies } = await import('next/headers')`.
+ */
+export function takesAsAValue(file: SourceFileRecord, module: string, imported: string): boolean {
+  const bindings = [
+    ...(file.imports.get(module) ?? []),
+    ...(file.awaitedImports.get(module) ?? []),
+  ].filter((binding) => !binding.typeOnly);
+  if (bindings.some((binding) => binding.imported === imported)) return true;
+  // A name bound to the export was answered above, so only the calls off the module remain.
+  const namespaces = new Set(bindings.filter((b) => b.imported === "*").map((b) => b.local));
+  return file.calls.some((call) =>
+    isCallTo(call, imported, { modules: [module], locals: new Set(), namespaces }),
+  );
+}
+
+/** A file holding modules whole in a form whose uses were not read, with those modules. */
+export type HeldUnread = {
+  readonly path: string;
+  readonly modules: readonly string[];
+};
+
+/**
+ * The files holding a module of the framework whole, as a namespace or through `import()`, in a
+ * form whose uses were not read. Only the framework's: a record names every module held that way,
+ * and nothing here asks what a file does with `react` or with a module of its own.
+ */
+export function frameworkModulesHeldUnread(index: SourceIndex): readonly HeldUnread[] {
+  return index.files.flatMap((file) => {
+    const modules = file.modulesHeldUnread.filter(
+      (module) => module === "next" || module.startsWith("next/"),
+    );
+    return modules.length === 0 ? [] : [{ path: file.path, modules }];
+  });
+}
+
+/** Files taking `imported` off `module` as a value, in any form `takesAsAValue` reads. */
 export function filesImporting(
   index: SourceIndex,
   module: string,
   imported: string,
 ): SourceFileRecord[] {
-  return index.files.filter((file) =>
-    (file.imports.get(module) ?? []).some(
-      (binding) => binding.imported === imported && !binding.typeOnly,
-    ),
-  );
+  return index.files.filter((file) => takesAsAValue(file, module, imported));
 }
 
 /** Files importing the module at all, whatever the bindings. Used for module-level pages. */
@@ -1573,16 +1792,35 @@ export function callsResolvedTo(
   const modules = typeof module === "string" ? [module] : module;
   const found: { file: SourceFileRecord; call: CallRecord }[] = [];
   for (const file of index.files) {
-    const locals = new Set(
-      modules
-        .flatMap((name) => file.imports.get(name) ?? [])
-        .filter((binding) => binding.imported === imported && !binding.typeOnly)
-        .map((binding) => binding.local),
-    );
-    if (locals.size === 0) continue;
+    const bindings = modules
+      .flatMap((name) => [
+        ...(file.imports.get(name) ?? []),
+        ...(file.awaitedImports.get(name) ?? []),
+      ])
+      .filter((binding) => !binding.typeOnly);
+    const localsOf = (name: string): Set<string> =>
+      new Set(bindings.filter((b) => b.imported === name).map((b) => b.local));
+    const locals = localsOf(imported);
+    const namespaces = localsOf("*");
     for (const call of file.calls) {
-      if (locals.has(call.callee)) found.push({ file, call });
+      if (isCallTo(call, imported, { modules, locals, namespaces })) found.push({ file, call });
     }
   }
   return found;
+}
+
+function isCallTo(
+  call: CallRecord,
+  imported: string,
+  held: {
+    readonly modules: readonly string[];
+    readonly locals: ReadonlySet<string>;
+    readonly namespaces: ReadonlySet<string>;
+  },
+): boolean {
+  if (call.from !== undefined) return call.callee === imported && held.modules.includes(call.from);
+  if (call.member !== undefined) {
+    return call.member === imported && held.namespaces.has(call.callee);
+  }
+  return held.locals.has(call.callee);
 }

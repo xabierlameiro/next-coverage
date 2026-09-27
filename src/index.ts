@@ -224,6 +224,7 @@ export function analyse(startDir: string, options: AnalyseOptions = {}): Analysi
     weights,
     build.kind === "read" ? build.output.weights.bytesByUrl : new Map(),
     build.kind === "read" ? build.output.weights.reason : unavailableReason(build),
+    build.kind === "read" ? build.output.weights.unreadableEntries : 0,
   );
 
   const preset = options.preset ?? "default";

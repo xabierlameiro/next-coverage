@@ -3,10 +3,10 @@ import type { BoundaryLeak } from "../collect/boundary.js";
 import type { ConstraintFinding } from "../collect/constraints.js";
 import type { ContrastReport } from "../collect/contrast.js";
 import type { Declaration } from "../collect/ledger.js";
-import type { MissingPackage } from "../collect/sources.js";
+import type { HeldUnread, MissingPackage } from "../collect/sources.js";
 import type { RankedRoute, WeightContrast, WeightReport } from "../collect/weight.js";
 import type { Bucket } from "../types.js";
-import type { ClassifiedEntry, CoverageResult, Silence } from "./classify.js";
+import type { ClassifiedEntry, CoverageResult, Silence, SkippedLink } from "./classify.js";
 import type { RenderOptions } from "./render.js";
 
 /**
@@ -228,6 +228,12 @@ export type SerialisedTotals = {
   readonly partiallyAdopted: number;
   readonly unmatchedDeclarations: number;
   readonly unresolvedValues: number;
+  /**
+   * Files holding a module of the framework whole, as a namespace or through `import()`, in a form
+   * whose uses were not read, relative to the project, each with the modules. Always present, so
+   * an empty list states that every use of them the project writes was read.
+   */
+  readonly modulesHeldUnread: readonly HeldUnread[];
   readonly clientClosure: number;
   /** Files a reading placed outside the Next.js server runtime, keyed by the signal. */
   readonly placedElsewhere: Readonly<Partial<Record<string, number>>>;
@@ -245,6 +251,21 @@ export type SerialisedTotals = {
    * links nothing, which is a different fact.
    */
   readonly linkedPackages?: { readonly scanned: number; readonly unmatched: number };
+  /**
+   * Source files and directories the scan found and could not open, and links it found leading
+   * outside the project and did not follow, relative to the project. Always present, so three
+   * empty lists state that everything found was read.
+   */
+  readonly unreadSources: {
+    readonly files: readonly string[];
+    readonly directories: readonly string[];
+    readonly links: readonly string[];
+  };
+  /**
+   * Links under the app directory the route walk did not follow, relative to the project, each
+   * with where it led. Always present, so an empty list states that every link met was followed.
+   */
+  readonly skippedLinks: readonly SkippedLink[];
   readonly boundaryLeaks: number;
   readonly withheldHeuristics: number;
   /** Conditions that read a build, on runs with none to read. Their entries are still classified. */
@@ -382,6 +403,8 @@ export type SerialisedWeights = {
     readonly reason?: string;
     readonly compared: number;
     readonly withoutFigure: number;
+    /** Entries of the build's record this tool could not read, so a figure may be missing. */
+    readonly unreadableEntries: number;
     /** Every comparable route under both orderings, furthest apart first. */
     readonly ranked: readonly SerialisedRankedRoute[];
   };
@@ -625,6 +648,7 @@ function serialiseTotals(result: CoverageResult): SerialisedTotals {
     partiallyAdopted: result.partiallyAdopted,
     unmatchedDeclarations: result.unmatchedDeclarations,
     unresolvedValues: result.unresolvedValues,
+    modulesHeldUnread: result.modulesHeldUnread,
     clientClosure: result.clientClosure,
     placedElsewhere: result.placedElsewhere,
     clientReachedWithoutDeclaring: result.clientReachedWithoutDeclaring,
@@ -633,6 +657,8 @@ function serialiseTotals(result: CoverageResult): SerialisedTotals {
       : { clientDirectivesWithoutReason: result.clientDirectivesWithoutReason }),
     unresolvedSpecifiers: result.unresolvedSpecifiers,
     ...(result.linkedPackages === undefined ? {} : { linkedPackages: result.linkedPackages }),
+    unreadSources: result.unreadSources,
+    skippedLinks: result.skippedLinks,
     boundaryLeaks: result.boundaryLeaks,
     withheldHeuristics: result.withheldHeuristics,
     conditionsNeedingBuild: result.conditionsNeedingBuild,
@@ -730,6 +756,7 @@ function serialiseWeights(weights: WeightReport, contrast: WeightContrast): Seri
         : {}),
       compared: contrast.compared,
       withoutFigure: contrast.withoutFigure,
+      unreadableEntries: contrast.unreadableEntries,
       ranked: contrast.ranked.map(serialiseRanked),
     },
   };

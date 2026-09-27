@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PAGE_EXTENSIONS, resolved, unresolved } from "../types.js";
-import { proxyFiles } from "./conventions.js";
+import { conventionOf, proxyFiles } from "./conventions.js";
 
 describe("where a proxy file may sit", () => {
   /**
@@ -38,5 +38,63 @@ describe("where a proxy file may sit", () => {
     expect(proxyFiles(unresolved("computed at runtime"))).toEqual(
       proxyFiles(resolved(DEFAULT_PAGE_EXTENSIONS)),
     );
+  });
+});
+
+describe("which file names a metadata convention", () => {
+  const extensions = DEFAULT_PAGE_EXTENSIONS;
+
+  it.each([
+    ["sitemap.xml", "sitemap"],
+    ["sitemap.ts", "sitemap"],
+    ["robots.txt", "robots"],
+    ["manifest.webmanifest", "manifest"],
+    ["manifest.json", "manifest"],
+    ["icon.svg", "icon"],
+    ["apple-icon.png", "apple-icon"],
+    ["opengraph-image.gif", "opengraph-image"],
+    ["twitter-image.tsx", "twitter-image"],
+  ])("should read %s as the convention", (fileName, name) => {
+    expect(conventionOf(fileName, extensions)).toEqual({ name, casingMismatch: false });
+  });
+
+  it.each([
+    "sitemap.txt",
+    "robots.xml",
+    "manifest.yaml",
+    "apple-icon.svg",
+    "opengraph-image.svg",
+    "icon.md",
+  ])("should not read %s as a convention, because Next.js does not", (fileName) => {
+    expect(conventionOf(fileName, extensions)).toBeUndefined();
+  });
+
+  it("should read the numbered files a segment holds several of", () => {
+    expect(conventionOf("icon1.png", extensions)).toEqual({ name: "icon", casingMismatch: false });
+    expect(conventionOf("opengraph-image2.tsx", extensions)).toEqual({
+      name: "opengraph-image",
+      casingMismatch: false,
+    });
+  });
+
+  it("should not number a convention that takes no number", () => {
+    expect(conventionOf("page1.tsx", extensions)).toBeUndefined();
+    expect(conventionOf("sitemap1.xml", extensions)).toBeUndefined();
+    expect(conventionOf("icon12.png", extensions)).toBeUndefined();
+  });
+
+  it("should report wrong casing on a metadata file that is not code", () => {
+    expect(conventionOf("Robots.txt", extensions)).toEqual({
+      name: "robots",
+      casingMismatch: true,
+    });
+    expect(conventionOf("Icon.png", extensions)).toEqual({ name: "icon", casingMismatch: true });
+  });
+
+  it("should read a metadata file written in an extension the project added", () => {
+    expect(conventionOf("sitemap.mdx", ["tsx", "mdx"])).toEqual({
+      name: "sitemap",
+      casingMismatch: false,
+    });
   });
 });

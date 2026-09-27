@@ -191,6 +191,14 @@ describe("a cache scope reading per-request data", () => {
     expect(predicateFor("directives/use-cache-private").requiredFlag).toBe("cacheComponents");
     expect(predicateFor("directives/use-cache").requiredFlag).toBe("cacheComponents");
   });
+
+  /**
+   * It suggests nothing, and the gate is not about suggesting: without it the used detection ran
+   * on a project with the flag off and reported a directive that does nothing there as adopted.
+   */
+  it("should gate the remote scope on the same flag, which its page asks for too", () => {
+    expect(predicateFor("directives/use-cache-remote").requiredFlag).toBe("cacheComponents");
+  });
 });
 
 describe("the client directive's remaining silence", () => {

@@ -605,6 +605,31 @@ describe("a path the configuration routes away from", () => {
     expect(findings[0]?.routes[0]?.serves).toContain("favicon.png/route.ts");
   });
 
+  it("should name the rules it could not read where the ones it read intercept nothing", () => {
+    const { config, tree } = projectWith(
+      [
+        "export default {",
+        "  async redirects() {",
+        "    return [",
+        "      { source: '/old', destination: '/new', permanent: true },",
+        "      { source: legacy(), destination: '/new', permanent: true },",
+        "    ];",
+        "  },",
+        "};",
+      ].join("\n"),
+      { "app/page.tsx": "export default () => null;" },
+    );
+    const { findings, checked, unread } = buildRouteInterceptions(config, tree);
+    expect(findings).toEqual([]);
+    expect(checked).toBe(2);
+    expect(unread).toEqual([
+      {
+        subject: "redirects",
+        reason: "'redirects' holds 1 entry that is not a literal and was not checked",
+      },
+    ]);
+  });
+
   it("should read the rules through an await and a resolved promise", () => {
     // The primary fixture writes `return await Promise.resolve([...])`, which read as an option
     // nobody had written until the reader peeled both.
@@ -1301,6 +1326,25 @@ describe("a value the documentation says to write in by hand", () => {
     expect(result.unread).toEqual([]);
   });
 
+  it("should say nothing about a component of the project's own with the same name", () => {
+    const { config, sources } = projectWith("export default { basePath: '/docs' };", {
+      "app/page.tsx":
+        "import { Image } from '../components/image';\nexport default () => <Image src='/me.png' alt='' />;",
+      "components/image.tsx": "export const Image = () => null;",
+    });
+    expect(buildUnprefixedAssets(config, sources, true).findings).toEqual([]);
+  });
+
+  it("should name the source under the name the file gave the import", () => {
+    const { config, sources } = projectWith("export default { basePath: '/docs' };", {
+      "app/page.tsx":
+        "import Picture from 'next/image';\nexport default () => <Picture src='/me.png' alt='' />;",
+    });
+    expect(buildUnprefixedAssets(config, sources, true).findings[0]?.assets[0]?.value).toBe(
+      "/me.png",
+    );
+  });
+
   it("should say nothing about a raw img element", () => {
     // The documented instruction names next/image. Extending it to a bare img would be this
     // tool's inference wearing the framework's words.
@@ -1464,6 +1508,33 @@ describe("modules the configuration names and the project does not hold", () => 
     expect(unread).toHaveLength(1);
     expect(unread[0]?.subject).toBe("instrumentationClientInject");
     expect(unread[0]?.reason).toContain("instrumentationClientInject");
+  });
+
+  it("should name the entries it could not read where the ones it read are all there", () => {
+    const { config, root } = projectWith(
+      "export default { instrumentationClientInject: ['./lib/a.js', injected()] };",
+      { "lib/a.js": "export default 1;" },
+    );
+    const { findings, checked, unread } = buildMissingModules(config, root, declaring());
+    expect(findings).toEqual([]);
+    expect(checked).toBe(1);
+    expect(unread).toEqual([
+      {
+        subject: "instrumentationClientInject",
+        reason:
+          "'instrumentationClientInject' holds 1 entry that is not a literal and was not checked",
+      },
+    ]);
+  });
+
+  it("should leave the count on the finding where there is one", () => {
+    const { config, root } = projectWith(
+      "export default { instrumentationClientInject: ['./lib/gone.js', injected()] };",
+      {},
+    );
+    const { findings, unread } = buildMissingModules(config, root, declaring());
+    expect(findings[0]?.unread).toBe(1);
+    expect(unread).toEqual([]);
   });
 
   it("should report no failed reading where the list read cleanly", () => {

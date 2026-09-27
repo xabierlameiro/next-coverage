@@ -60,11 +60,14 @@ const RESULT: CoverageResult = {
   preset: "default",
   unmatchedDeclarations: 0,
   unresolvedValues: 0,
+  modulesHeldUnread: [],
   boundaryLeaks: 0,
   clientClosure: 0,
   clientReachedWithoutDeclaring: 0,
   placedElsewhere: {},
   unresolvedSpecifiers: 0,
+  unreadSources: { files: [], directories: [], links: [] },
+  skippedLinks: [],
   constraintsChecked: 1,
   constraintsContradicted: 0,
   constraintsWithoutEntry: 0,
@@ -728,6 +731,36 @@ describe("the client weight section", () => {
     expect(report).toContain("no ordering contrasted: no build was read");
   });
 
+  /**
+   * The sentence states a share of pairs, and the figure it is given is a rank correlation. At
+   * the two ends and in the middle the difference is the whole meaning of the line.
+   */
+  it.each([
+    { agreement: -1, percent: "0%" },
+    { agreement: 0, percent: "50%" },
+    { agreement: 1, percent: "100%" },
+  ])(
+    "should print $percent of the pairs for an agreement of $agreement",
+    ({ agreement, percent }) => {
+      const report = renderReport(
+        {
+          ...WEIGHTED,
+          weightContrast: {
+            orderedPairs: 6,
+            agreement,
+            compared: 4,
+            withoutFigure: 0,
+            unreadableEntries: 0,
+            ranked: [],
+            furthest: [],
+          },
+        },
+        { colour: false, version: "16.3.0", projectRoot: "/project" },
+      );
+      expect(report).toContain(`agrees with the build's on ${percent} of the 6 route pairs`);
+    },
+  );
+
   it("states the agreement as a fact about this tool's derivation", () => {
     const report = renderReport(
       {
@@ -738,6 +771,7 @@ describe("the client weight section", () => {
           separation: { whenDiffering: 15 * 1024, whenAgreeing: 41 * 1024 },
           compared: 94,
           withoutFigure: 26,
+          unreadableEntries: 0,
           ranked: [
             { url: "/dash", modules: 3, bytes: 204800, byModules: 1, byBytes: 1, gap: 0 },
             { url: "/blog", modules: 1, bytes: 102400, byModules: 2, byBytes: 2, gap: 0 },
@@ -749,10 +783,13 @@ describe("the client weight section", () => {
       },
       { colour: false, version: "16.3.0", projectRoot: "/project" },
     );
-    // Named as a proportion of pairs, with the routes they came from beside it: 84% is not a
+    // Named as a proportion of pairs, with the routes they came from beside it: it is not a
     // figure over 94 routes, and the earlier wording read as though it were.
+    //
+    // 92% and not 84%: the agreement is concordant less discordant, so 0.84 is 92% of the pairs
+    // placed alike and 8% placed differently.
     expect(report).toContain(
-      "this tool's ordering agrees with the build's on 84% of the 4371 route pairs both orderings place, across 94 routes",
+      "this tool's ordering agrees with the build's on 92% of the 4371 route pairs both orderings place, across 94 routes",
     );
     // The figure a rank correlation cannot carry: a pair counts the same at 1 kB and at 800.
     expect(report).toContain(
@@ -761,6 +798,45 @@ describe("the client weight section", () => {
     expect(report).toContain("26 routes carry no recorded figure");
     expect(report).toContain("/odd 2 by modules, 40 by bytes");
     expect(report).toContain("200 kB first load, per the build");
+  });
+
+  it("should say the build's record was read in part, contrasted or not", () => {
+    const options = { colour: false, version: "16.3.0", projectRoot: "/project" };
+    const note =
+      "2 entries of the build's recorded figures were written in a shape this tool does not read";
+    const contrasted = renderReport(
+      {
+        ...WEIGHTED,
+        weightContrast: {
+          orderedPairs: 6,
+          agreement: 1,
+          compared: 4,
+          withoutFigure: 1,
+          unreadableEntries: 2,
+          ranked: [],
+          furthest: [],
+        },
+      },
+      options,
+    );
+    const uncontrasted = renderReport(
+      {
+        ...WEIGHTED,
+        weightContrast: {
+          orderedPairs: 0,
+          compared: 1,
+          withoutFigure: 3,
+          unreadableEntries: 2,
+          ranked: [],
+          furthest: [],
+          reason: "fewer than two routes carry both a module count and a recorded figure",
+        },
+      },
+      options,
+    );
+    expect(contrasted).toContain(note);
+    expect(uncontrasted).toContain(note);
+    expect(renderReport(WEIGHTED, options)).not.toContain("recorded figures were written");
   });
 
   it("caps the routes it lists and counts the remainder", () => {
@@ -1569,6 +1645,202 @@ describe("what the report says about linked workspace packages", () => {
     const output = renderFindings(linked, OPTIONS);
     expect(output).toContain("1 workspace dependency names no member of the workspace");
     expect(output).not.toContain("read as part of this project");
+  });
+});
+
+describe("text the analysed project wrote", () => {
+  const HOSTILE = {
+    ...RESULT,
+    unreadSources: {
+      files: ["lib/\u001b[2K\u001b[1Asession.ts", "lib/a.ts\n  0 findings"],
+      directories: [],
+      links: [],
+    },
+  };
+
+  /**
+   * An escape in a file name reached the terminal as it came, so a project could move the cursor
+   * over what the report had already said about it.
+   */
+  it("should print an escape in a path as text and never as a sequence", () => {
+    const output = renderReport(HOSTILE, { ...OPTIONS, colour: false });
+    expect(output).toContain("lib/\\u001b[2K\\u001b[1Asession.ts");
+    expect(output).not.toContain("\u001b");
+  });
+
+  it("should not let a line feed in a path add a line to the report", () => {
+    const output = renderReport(HOSTILE, { ...OPTIONS, colour: false });
+    expect(output).toContain("lib/a.ts\\u000a  0 findings");
+    expect(output.split("\n")).not.toContain("  0 findings");
+  });
+
+  it("should keep its own colour codes and only those", () => {
+    const output = renderReport(HOSTILE, { ...OPTIONS, colour: true });
+    // Every escape left in the output, with the two characters that follow it.
+    const sequences = output
+      .split("\u001b")
+      .slice(1)
+      .map((after) => after.slice(0, 3));
+    expect(new Set(sequences)).toEqual(new Set(["[1m", "[2m", "[0m"]));
+  });
+
+  it("should do the same in the findings view", () => {
+    const output = renderFindings(HOSTILE, { ...OPTIONS, colour: false });
+    expect(output).not.toContain("\u001b");
+  });
+
+  it("should do the same to the root it was asked about", () => {
+    const output = renderReport(RESULT, {
+      ...OPTIONS,
+      colour: false,
+      projectRoot: "/tmp/\u001b]0;owned\u0007app",
+    });
+    expect(output).toContain("/tmp/\\u001b]0;owned\\u0007app");
+    expect(output).not.toContain("\u001b");
+  });
+
+  it("should do the same where there was nothing to analyse", () => {
+    const output = renderStop({ kind: "no-project", from: "/tmp/\u001b[2Jx" }, false);
+    expect(output).toContain("/tmp/\\u001b[2Jx");
+    expect(output).not.toContain("\u001b");
+  });
+});
+
+describe("what the report says about source it could not read", () => {
+  const UNREAD = {
+    ...RESULT,
+    unreadSources: { files: ["lib/session.ts"], directories: ["vendor"], links: [] },
+  };
+
+  it("should say nothing where every file opened", () => {
+    expect(renderReport(RESULT, OPTIONS)).not.toContain("could not be read");
+  });
+
+  it("should name what it could not read and say what that costs", () => {
+    expect(renderReport(UNREAD, OPTIONS)).toContain(
+      "1 source file and 1 directory could not be read — lib/session.ts, vendor — so an entry reporting nothing may be used there",
+    );
+  });
+
+  it("should count only the kind that failed", () => {
+    const files = {
+      ...RESULT,
+      unreadSources: { files: ["a.ts", "b.ts"], directories: [], links: [] },
+    };
+    expect(renderReport(files, OPTIONS)).toContain("2 source files could not be read — a.ts, b.ts");
+  });
+
+  it("should name three and count the rest", () => {
+    const many = {
+      ...RESULT,
+      unreadSources: {
+        files: ["a.ts", "b.ts", "c.ts", "d.ts", "e.ts"],
+        directories: [],
+        links: [],
+      },
+    };
+    expect(renderReport(many, OPTIONS)).toContain(
+      "5 source files could not be read — a.ts, b.ts, c.ts and 2 more",
+    );
+  });
+
+  /** It says the run read less than the project holds, so the findings view keeps it. */
+  it("should carry it into the findings view", () => {
+    expect(renderFindings(UNREAD, OPTIONS)).toContain(
+      "1 source file and 1 directory could not be read",
+    );
+  });
+
+  it("should name a link leading outside the project apart from what failed to open", () => {
+    const linked = {
+      ...RESULT,
+      unreadSources: { files: [], directories: [], links: ["lib/shared"] },
+    };
+    const output = renderReport(linked, OPTIONS);
+    expect(output).toContain(
+      "1 link leads outside the project and was not followed — lib/shared — so an entry reporting nothing may be used there",
+    );
+    expect(output).not.toContain("could not be read");
+    expect(renderFindings(linked, OPTIONS)).toContain("1 link leads outside the project");
+  });
+});
+
+describe("what the report says about a module it held whole and did not read", () => {
+  const NOTE =
+    "1 file holds a module of Next.js whole, in a form whose uses were not read — lib/tags.ts (next/cache) — so an entry reported as unused may be used there, and a tag with no counterpart may have it there";
+
+  it("should say nothing where every use was read", () => {
+    expect(renderReport(RESULT, OPTIONS)).not.toContain("a module of Next.js whole");
+    expect(renderFindings(RESULT, OPTIONS)).not.toContain("a module of Next.js whole");
+  });
+
+  it("should name the file, the module and what that costs, in both views", () => {
+    const held = {
+      ...RESULT,
+      modulesHeldUnread: [{ path: "lib/tags.ts", modules: ["next/cache"] }],
+    };
+    expect(renderReport(held, OPTIONS)).toContain(NOTE);
+    expect(renderFindings(held, OPTIONS)).toContain(NOTE);
+  });
+
+  it("should name three and count the rest", () => {
+    const many = {
+      ...RESULT,
+      modulesHeldUnread: ["a.ts", "b.ts", "c.ts", "d.ts"].map((path) => ({
+        path,
+        modules: ["next/headers", "next/cache"],
+      })),
+    };
+    expect(renderReport(many, OPTIONS)).toContain(
+      "4 files hold a module of Next.js whole, in a form whose uses were not read — a.ts (next/headers, next/cache), b.ts (next/headers, next/cache), c.ts (next/headers, next/cache) and 1 more",
+    );
+  });
+});
+
+describe("what the report says about a link it did not follow", () => {
+  const SKIPPED = {
+    ...RESULT,
+    skippedLinks: [
+      { path: "app/loop", leads: "back" as const },
+      { path: "app/shared", leads: "outside" as const },
+    ],
+  };
+
+  it("should say nothing where every link was followed", () => {
+    expect(renderReport(RESULT, OPTIONS)).not.toContain("not followed");
+  });
+
+  it("should name each link, where it led and what that costs", () => {
+    expect(renderReport(SKIPPED, OPTIONS)).toContain(
+      "2 links under the app directory were not followed — app/loop (leads back to a directory holding it), app/shared (leads outside the app directory) — so a route reached through one is not in this report",
+    );
+  });
+
+  it("should name three and count the rest", () => {
+    const many = {
+      ...RESULT,
+      skippedLinks: ["a", "b", "c", "d"].map((name) => ({
+        path: `app/${name}`,
+        leads: "outside" as const,
+      })),
+    };
+    const output = renderReport(many, OPTIONS);
+    expect(output).toContain("4 links under the app directory were not followed");
+    expect(output).toContain("app/c (leads outside the app directory) and 1 more");
+  });
+
+  it("should say so where the link is a convention leading to a file", () => {
+    const file = { ...RESULT, skippedLinks: [{ path: "app/a/page.tsx", leads: "file" as const }] };
+    expect(renderReport(file, OPTIONS)).toContain(
+      "1 link under the app directory was not followed — app/a/page.tsx (leads to a file) —",
+    );
+  });
+
+  /** It says the routes reported are fewer than the project serves, so the findings view keeps it. */
+  it("should carry it into the findings view", () => {
+    expect(renderFindings(SKIPPED, OPTIONS)).toContain(
+      "2 links under the app directory were not followed",
+    );
   });
 });
 

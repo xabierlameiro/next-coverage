@@ -9,6 +9,7 @@ import {
   readOptionDefaults,
   readServerExternals,
   readTranspiled,
+  readWebVitals,
 } from "./defaults.js";
 import { type InstalledNext, resolveInstalledNext } from "./project.js";
 
@@ -330,5 +331,46 @@ describe.skipIf(available.length === 0)("the defaults a scalar reader cannot rea
     // The reader does resolve, and holds scalars from the same object. So the absence above is the
     // ternary and not a read that failed.
     expect(defaults.value.get("reactMaxHeadersLength")).toBe(6000);
+  });
+});
+
+describe("the metrics the installed release accepts", () => {
+  function installedDeclaring(declaration: string): InstalledNext {
+    const root = mkdtempSync(join(tmpdir(), "next-coverage-vitals-"));
+    const file = join(root, "dist", "shared", "lib", "utils.d.ts");
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, declaration);
+    return { realPath: root, linkPath: root, version: "16.3.0" };
+  }
+
+  it("should read the six names the declaration holds", () => {
+    const found = readWebVitals(
+      installedDeclaring(
+        'export declare const WEB_VITALS: readonly ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"];\n',
+      ),
+    );
+    expect(found.status).toBe("resolved");
+    if (found.status !== "resolved") return;
+    expect([...found.value]).toEqual(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"]);
+  });
+
+  it.skipIf(available.length === 0)("should read them from an installed release", () => {
+    for (const fixture of available) {
+      expect(readWebVitals(installedOf(fixture)).status).toBe("resolved");
+    }
+  });
+
+  it("should refuse a declaration naming no metric", () => {
+    const found = readWebVitals(
+      installedDeclaring("export declare const WEB_VITALS: readonly [];\n"),
+    );
+    expect(found.status).toBe("unresolved");
+  });
+
+  it("should refuse a file the declaration is not in", () => {
+    const found = readWebVitals(installedDeclaring("export declare const OTHER: string;\n"));
+    expect(found.status).toBe("unresolved");
+    if (found.status !== "unresolved") return;
+    expect(found.reason).toContain("WEB_VITALS");
   });
 });

@@ -14,6 +14,7 @@ import {
   hasDirective,
   placedElsewhere,
   productionFiles,
+  takesAsAValue,
 } from "../collect/sources.js";
 import { FUNCTION_SHAPES, INVALIDATION_SYMBOLS } from "./function-modules.js";
 import type {
@@ -61,10 +62,13 @@ function serverActionFiles(context: PredicateContext): SourceFileRecord[] {
   return context.sources.files.filter((file) => hasDirective(file, "use server"));
 }
 
-function callsSymbol(file: SourceFileRecord, module: string, symbol: string): boolean {
-  return (file.imports.get(module) ?? []).some(
-    (binding) => binding.imported === symbol && !binding.typeOnly,
-  );
+/**
+ * Whether the file may take the symbol: it does, or it holds the module whole in a form whose uses
+ * were not read. Asked before a file is told what it is missing, because a file that hands
+ * `next/cache` on may call the very function the suggestion would name.
+ */
+function mayTake(file: SourceFileRecord, module: string, symbol: string): boolean {
+  return takesAsAValue(file, module, symbol) || file.modulesHeldUnread.includes(module);
 }
 
 /** Convention files the route tree already identified, keyed by path. */
@@ -103,8 +107,10 @@ function detectUsed(context: PredicateContext, surface: SurfaceEntry): Verdict {
   }
 
   const files = shape.acceptTypeOnly
-    ? context.sources.files.filter((file) =>
-        (file.imports.get(shape.module) ?? []).some((b) => b.imported === surface.title),
+    ? context.sources.files.filter(
+        (file) =>
+          (file.imports.get(shape.module) ?? []).some((b) => b.imported === surface.title) ||
+          takesAsAValue(file, shape.module, surface.title),
       )
     : filesImporting(context.sources, shape.module, surface.title);
   return files.length === 0 ? NO_MATCH : match(files.map((f) => f.path));
@@ -124,7 +130,7 @@ function evidenceOf(files: readonly SourceFileRecord[], note: string, gain: stri
 function cachedWithout(symbol: string, note: string, gain: string): SuggestionPredicate {
   return (context: PredicateContext): Suggestion =>
     evidenceOf(
-      cachedFiles(context).filter((file) => !callsSymbol(file, "next/cache", symbol)),
+      cachedFiles(context).filter((file) => !mayTake(file, "next/cache", symbol)),
       note,
       gain,
     );
@@ -221,7 +227,7 @@ function dynamicPagesWithoutStaticParams(context: PredicateContext): readonly Ro
  */
 function noStoreImporters(context: PredicateContext): SourceFileRecord[] {
   return productionFiles(context.sources).filter((file) =>
-    callsSymbol(file, "next/cache", "unstable_noStore"),
+    takesAsAValue(file, "next/cache", "unstable_noStore"),
   );
 }
 
@@ -316,8 +322,7 @@ function catchesReachingASignalThrower(context: PredicateContext): Suggestion {
   const catchers = new Set(
     productionFiles(context.sources)
       .filter(
-        (file) =>
-          file.catchClauses > 0 && !callsSymbol(file, "next/navigation", "unstable_rethrow"),
+        (file) => file.catchClauses > 0 && !mayTake(file, "next/navigation", "unstable_rethrow"),
       )
       .map((file) => file.path),
   );
@@ -513,9 +518,12 @@ function rootLayoutFile(context: PredicateContext): string | undefined {
   )?.file;
 }
 
-/** Whether any production file imports a symbol from a framework module. */
+/**
+ * Whether any production file may take a symbol from a framework module. Both callers ask it to
+ * decide a suggestion is not owed, so a file holding the module unread answers yes.
+ */
 function projectImports(context: PredicateContext, module: string, symbol: string): boolean {
-  return productionFiles(context.sources).some((file) => callsSymbol(file, module, symbol));
+  return productionFiles(context.sources).some((file) => mayTake(file, module, symbol));
 }
 
 /**
@@ -587,7 +595,7 @@ function adoptedOnlyTheOtherInterrupt(present: string, missing: string): Suggest
   return (context): Suggestion => {
     if (projectImports(context, "next/navigation", missing)) return NO_MATCH;
     const files = productionFiles(context.sources)
-      .filter((file) => callsSymbol(file, "next/navigation", present))
+      .filter((file) => takesAsAValue(file, "next/navigation", present))
       .map((file) => file.path)
       .sort();
     return files.length === 0
@@ -875,7 +883,7 @@ const WOULD_APPLY: Readonly<Record<string, SuggestionPredicate>> = {
 /** Server actions that mutate without invalidating anything the client is showing. */
 function serverActionsWithoutInvalidation(context: PredicateContext): SourceFileRecord[] {
   return serverActionFiles(context).filter(
-    (file) => !INVALIDATION_SYMBOLS.some((symbol) => callsSymbol(file, "next/cache", symbol)),
+    (file) => !INVALIDATION_SYMBOLS.some((symbol) => mayTake(file, "next/cache", symbol)),
   );
 }
 
@@ -1090,7 +1098,7 @@ const WOULD_APPLY_STRICT: Readonly<Record<string, SuggestionPredicate>> = {
   "functions/next-request": (context) =>
     evidenceOfPaths(
       routeHandlerFiles(context)
-        .filter((file) => file.parsesRequestUrl && !callsSymbol(file, "next/server", "NextRequest"))
+        .filter((file) => file.parsesRequestUrl && !mayTake(file, "next/server", "NextRequest"))
         .map((file) => file.path)
         .sort(),
       "these handlers take the request URL apart by hand",
@@ -1099,9 +1107,7 @@ const WOULD_APPLY_STRICT: Readonly<Record<string, SuggestionPredicate>> = {
   "functions/next-response": (context) =>
     evidenceOfPaths(
       routeHandlerFiles(context)
-        .filter(
-          (file) => file.jsonResponses > 0 && !callsSymbol(file, "next/server", "NextResponse"),
-        )
+        .filter((file) => file.jsonResponses > 0 && !mayTake(file, "next/server", "NextResponse"))
         .map((file) => file.path)
         .sort(),
       "these handlers build a JSON response by stringifying it themselves",
@@ -1137,7 +1143,7 @@ const WOULD_APPLY_STRICT: Readonly<Record<string, SuggestionPredicate>> = {
         )
         .filter(
           (file) =>
-            file.statusValues.includes(404) && !callsSymbol(file, "next/navigation", "notFound"),
+            file.statusValues.includes(404) && !mayTake(file, "next/navigation", "notFound"),
         )
         .map((file) => file.path)
         .sort(),

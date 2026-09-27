@@ -2092,6 +2092,39 @@ describe("flags reopened under the strict preset", () => {
     expect(condition(context, surface(id)).matched).toBe(false);
   });
 
+  describe("a metric the installed release does not accept", () => {
+    const id = "config/next-config-js/webVitalsAttribution";
+    const INSTALLED = {
+      "node_modules/next/package.json": JSON.stringify({ name: "next", version: "16.3.0" }),
+      "node_modules/next/dist/shared/lib/utils.d.ts":
+        'export declare const WEB_VITALS: readonly ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"];\n',
+    };
+
+    function strictOn(metrics: string) {
+      const found = CONFIG_PREDICATES.find((predicate) => predicate.id === id);
+      const condition = found?.wouldApplyStrict;
+      if (!condition) throw new Error("no strict condition on the web vitals entry");
+      const context = project({
+        ...TS,
+        ...INSTALLED,
+        "next.config.ts": `export default { experimental: { webVitalsAttribution: ${metrics} } };`,
+      });
+      return condition(context, surface(id));
+    }
+
+    it("should name it", () => {
+      const verdict = strictOn("['CLS', 'NOPE']");
+      expect(verdict.matched).toBe(true);
+      if (!verdict.matched) return;
+      expect(verdict.note).toContain("NOPE");
+      expect(verdict.note).not.toContain("CLS");
+    });
+
+    it("should stay silent where every metric is accepted", () => {
+      expect(strictOn("['CLS', 'LCP']").matched).toBe(false);
+    });
+  });
+
   describe("a value whose consequence its page states", () => {
     it("should report the build skipping the type check", () => {
       const { verdict } = strictly(ids.typescript, {

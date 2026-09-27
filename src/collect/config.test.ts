@@ -74,6 +74,33 @@ describe("plugin wrappers", () => {
     if (flag.status === "unresolved") expect(flag.reason).toContain("all functions");
   });
 
+  it("should read the config a plugin list is applied to rather than the list", () => {
+    // The `next-compose-plugins` signature, written by two corpus projects on Next 16 with an app
+    // directory: the plugins come first as an array, the config second. An array is not a function,
+    // so it was taken as the carrier and nothing the projects configured was read.
+    const config = configOf(`${BODY}\nexport default withPlugins([withA, withB], nextConfig);\n`);
+    expect(readFlag(config, "typedRoutes")).toEqual({ status: "resolved", value: true });
+    expect(readFlag(config, "experimental.taint")).toEqual({ status: "resolved", value: true });
+  });
+
+  it("should read past a plugin list whose entries are themselves arrays", () => {
+    // `next-compose-plugins` also takes `[plugin, options]` pairs, which nests the list one deeper.
+    const config = configOf(
+      `${BODY}\nexport default withPlugins([[withA], [withB, { dest: 'public' }]], nextConfig);\n`,
+    );
+    expect(readFlag(config, "typedRoutes")).toEqual({ status: "resolved", value: true });
+    // `dest` belongs to a plugin, not to Next.js. Reading it would mean an entry of the list was
+    // taken as the config.
+    expect(readFlag(config, "dest")).toEqual({ status: "resolved" });
+  });
+
+  it("should refuse a call carrying nothing but functions and plugin lists", () => {
+    const config = configOf(`${BODY}\nexport default withPlugins([withA, withB], (c) => c);\n`);
+    const flag = readFlag(config, "typedRoutes");
+    expect(flag.status).toBe("unresolved");
+    if (flag.status === "unresolved") expect(flag.reason).toContain("plugin lists");
+  });
+
   it("should read a config a conditional applies a plugin to on one branch only", () => {
     // `dkast/biztro` names the conditional and exports the name. Both branches are the same
     // config, one of them wrapped, so which branch runs does not change what is configured.
@@ -280,6 +307,28 @@ describe("following a name to the config", () => {
   it("should refuse a name assigned after it is declared", () => {
     const config = configOf(
       `let a = nextConfig;\n${BODY}\na = { typedRoutes: false };\nexport default a;\n`,
+    );
+    const flag = readFlag(config, "typedRoutes");
+    expect(flag.status).toBe("unresolved");
+    if (flag.status === "unresolved") expect(flag.reason).toContain("assigned");
+  });
+
+  it("should follow a name reassigned to a wrapper over the name it was declared from", () => {
+    // Measured shape, written by two corpus projects on Next 16 with an app directory: the name is
+    // declared from another, then reassigned to a plugin call carrying that other name. At the
+    // point of the assignment the two are the same object, so this is a wrapping and not a
+    // replacement.
+    const config = configOf(
+      `${BODY}\nlet exportedConfig = nextConfig;\nif (process.env.SENTRY) {\n  exportedConfig = withMDX(nextConfig);\n}\nexport default exportedConfig;\n`,
+    );
+    expect(readFlag(config, "typedRoutes")).toEqual({ status: "resolved", value: true });
+  });
+
+  it("should refuse a name reassigned to a wrapper over a different object", () => {
+    // The relaxation above must not reach this: the carrier is neither the name nor the name it was
+    // declared from, so what is configured really does change.
+    const config = configOf(
+      `${BODY}\nconst other = { typedRoutes: false };\nlet a = nextConfig;\na = withMDX(other);\nexport default a;\n`,
     );
     const flag = readFlag(config, "typedRoutes");
     expect(flag.status).toBe("unresolved");

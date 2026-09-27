@@ -133,3 +133,10 @@ allangrds/check-imovel
 cds-snc/platform-forms-client
 huseyindol/nextjs-approute-project
 mkayander/dStruct
+EmberlyOSS/Emberly
+flotiq/nextjs-starter-boilerplate
+jinruozai/HTML-Light-Demo
+kochan4php/kokunime
+minlulin/bobsolar
+mkeverything/mktour
+moji-open-source/moji-chat

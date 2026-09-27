@@ -141,6 +141,61 @@ being read as a shape nobody writes.
 build.** Five of them do. Measuring those needs a harness that installs and builds, which is a
 different tool.
 
+## The config bench
+
+One question this corpus answers far too expensively: **how many shapes of `next.config` can the
+reader resolve.** A pass here clones and unpacks every project to answer it, and the reader never
+needed any of that — `readNextConfig` takes a directory path and never file content, so a directory
+holding the one file is the whole input.
+
+`config-bench.ts` exploits that. 856 configs in roughly 400ms, against hours and gigabytes for the
+same figure:
+
+```bash
+./corpus/fetch-configs.sh "$TMPDIR/configs"
+BENCH_DIR="$TMPDIR/configs" BENCH_REPORT="$TMPDIR/bench.tsv" \
+  pnpm vitest run --config corpus/config-bench.config.ts
+```
+
+`config-projects.txt` holds the slugs, one `owner/repo` per line, kept separate from `projects.txt`
+because it is a different cohort with a different purpose: it needs breadth of config shape and
+nothing else, so it carries projects this corpus would reject — Pages Router, Next 9, unmaintained.
+Only the configs are downloaded, never the projects.
+
+**No third-party file is stored here, so the cohort is a list of names and the files move.** Storing
+the configs would mean shipping 3.7 MB of other people's code under mixed licences from a public
+repository, to save a fetch anyone runs in one command. The
+second column of each line is the truncated sha256 of that project's config as the last measurement
+read it, and `fetch-configs.sh` prints `drifted:` — how many now differ. That is what makes two
+figures comparable: a bench number that moved while `drifted` is large says nothing about a change to
+the reader, and re-measuring both sides of the change against one freshly fetched directory is the
+only way to read it. A slug with no hash was added since the last measurement and is not drift.
+Refresh the column when a pass is the new baseline:
+
+```bash
+while read -r slug _; do
+  f=$(ls "$TMPDIR/configs/${slug//\//__}"/next.config.* 2>/dev/null | head -1)
+  [ -n "$f" ] && printf '%s\t%s\n' "$slug" "$(shasum -a 256 "$f" | cut -c1-16)" \
+    || printf '%s\n' "$slug"
+done < corpus/config-projects.txt > "$TMPDIR/rehashed.txt"
+```
+
+The TSV is one row per project: verdict, slug, detail. `RESOLVED` carries the number of properties
+read, `UNRESOLVED` the reason, `NO_SOURCE` means no config was found, and **`THREW` is the one
+verdict that is always a defect** — the reader is handed a file it did not write and must answer,
+never raise.
+
+**Read it as a comparison, not as a level.** The number that means something is the difference
+between two passes over the same directory, one per side of a change. On 2026-09-27 a change to
+which argument of a plugin call carries the config moved it from 732 resolved to 801, with 69
+projects changing verdict and none regressing; both bugs fixed that day were found here and only
+then confirmed through the harness.
+
+The absolute figure is not coverage of the ecosystem. 55 configs still resist, and most are shapes no
+reader reaches without resolving modules. Of the ones that did resolve, a verdict says the reader
+reached an object literal — not that it reached the right one, which is what the harness checks by
+counting constraints.
+
 ## The manifest
 
 `projects.txt`, one `owner/repo [subpath]` per line. Entries rot as projects are renamed, deleted or

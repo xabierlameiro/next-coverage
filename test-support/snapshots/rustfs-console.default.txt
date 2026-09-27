@@ -198,8 +198,8 @@ not-evaluated functions/cacheLife
 not-evaluated functions/cacheTag
 not-evaluated functions/catchError
 not-evaluated functions/connection
-not-evaluated functions/cookies
-not-evaluated functions/draft-mode
+not-applicable functions/cookies
+not-applicable functions/draft-mode
 not-evaluated functions/fetch
 not-evaluated functions/forbidden
 not-evaluated functions/generate-image-metadata

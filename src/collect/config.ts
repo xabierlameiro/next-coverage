@@ -134,8 +134,19 @@ function assignsTo(statements: readonly ts.Statement[], name: string): boolean {
  *
  * No statement order is read and no flow is simulated. The claim is only that where every
  * assignment wraps, unwrapping reaches the declaration's literal whichever assignment ran.
+ *
+ * `declaredFrom` is the name this one was declared from, when it was declared from a name at all:
+ * `let config = nextConfig` makes `config = withBundleAnalyzer(nextConfig)` a wrapping of the same
+ * object, though it names the other binding. Two corpus projects write exactly that, and reading
+ * the carrier as a different object left both unresolved. It is only ever the declared-from name,
+ * never any name in scope: `config = withX(somethingElse)` does replace what is configured, and
+ * stays refused.
  */
-function onlyWrapsItself(statements: readonly ts.Statement[], name: string): boolean {
+function onlyWrapsItself(
+  statements: readonly ts.Statement[],
+  name: string,
+  declaredFrom?: string,
+): boolean {
   const mentions = (node: ts.Node, sought: string): boolean => {
     let found = false;
     const walk = (child: ts.Node): void => {
@@ -151,7 +162,8 @@ function onlyWrapsItself(statements: readonly ts.Statement[], name: string): boo
     const carrier = call.arguments
       .map(unwrapTypeSyntax)
       .find((argument) => asFunction(argument) === undefined);
-    return carrier !== undefined && ts.isIdentifier(carrier) && carrier.text === name;
+    if (carrier === undefined || !ts.isIdentifier(carrier)) return false;
+    return carrier.text === name || carrier.text === declaredFrom;
   };
 
   const assigns = (kind: ts.SyntaxKind): boolean =>
@@ -314,6 +326,16 @@ const MAX_WRAPPER_DEPTH = 6;
  * checked instead of twelve. A function passed to a wrapper is the transformation being applied,
  * never the configuration it is applied to, so skipping it needs no knowledge of which method is
  * doing the folding.
+ *
+ * An array literal is skipped for the same reason a function is, and on a stronger ground: a
+ * `NextConfig` is an object, so an array in this position is the list of plugins being applied and
+ * never the configuration they are applied to. `next-compose-plugins` puts that list first and the
+ * config second — `withPlugins([withTM, withImages], { … })` in `flotiq/nextjs-starter-boilerplate`,
+ * `withPlugins([[bundleAnalyzer], [withNextIntl], [withPWA]], nextConfig)` in `mkeverything/mktour`.
+ * The list is not a function, so it was taken as the carrier and every option both projects set went
+ * unread: five of the thirteen documented constraints checked instead of thirteen, with `redirects`,
+ * `basePath` and `cacheComponents` among the ones left unchecked. Skipping arrays costs nothing that
+ * was working, since an array reached as the carrier resolves to no object literal either way.
  */
 function unwrapWrappers(node: ts.Expression): Resolved<ts.Expression> {
   let current = unwrapTypeSyntax(node);
@@ -322,13 +344,16 @@ function unwrapWrappers(node: ts.Expression): Resolved<ts.Expression> {
     if (current.arguments.length === 0) {
       return unresolved("default export is a call with no arguments");
     }
-    const carrier = current.arguments
-      .map(unwrapTypeSyntax)
-      .find((argument) => asFunction(argument) === undefined);
-    // Every argument being a function is a call that applies transformations to something this
-    // reader cannot see. Reporting one of them as the config would describe a shape nobody wrote.
+    const candidates = current.arguments.map(unwrapTypeSyntax);
+    const carrier = candidates.find(
+      (argument) => asFunction(argument) === undefined && !ts.isArrayLiteralExpression(argument),
+    );
+    // Every argument being a transformation is a call that applies them to something this reader
+    // cannot see. Reporting one of them as the config would describe a shape nobody wrote.
     if (carrier === undefined) {
-      return unresolved("default export is a call whose arguments are all functions");
+      return unresolved(
+        "default export is a call whose arguments are all functions or plugin lists",
+      );
     }
     current = carrier;
   }
@@ -618,10 +643,12 @@ function objectOf(
     // plainly another wraps it. Relaxed at this call site rather than inside the guard, so the four
     // other readings that consult it — rule lists above all, where a stale binding once had this
     // reader report a rule against a route the project serves — cannot inherit it by accident.
+    const declared = unwrapTypeSyntax(value);
+    const declaredFrom = ts.isIdentifier(declared) ? declared.text : undefined;
     const assigning = lists.filter((statements) => assignsTo(statements, name));
     if (
       assigning.length > 0 &&
-      !assigning.every((statements) => onlyWrapsItself(statements, name))
+      !assigning.every((statements) => onlyWrapsItself(statements, name, declaredFrom))
     ) {
       return unresolved(`'${name}' is assigned after it is declared`);
     }

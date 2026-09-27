@@ -1,4 +1,5 @@
 import { join, relative } from "node:path";
+import { readFlag } from "../collect/config.js";
 import { rootEntryFiles } from "../collect/conventions.js";
 import type { SurfaceEntry } from "../collect/docs.js";
 import { reachedFromAny, reaching } from "../collect/graph.js";
@@ -745,7 +746,49 @@ function pagesThatCannotVaryTheirTitle(context: PredicateContext): string[] {
  * reader who sees an API ruled out stops thinking about it — so each rests on something absent
  * that the tool observes, never on a project having chosen not to adopt something.
  */
+/**
+ * The config file's path when the project exports statically, and nothing otherwise.
+ *
+ * `output: 'export'` is the one option that takes APIs away rather than adding them. The framework
+ * publishes the list of what a static export does not support — `01-app/02-guides/static-exports.md`,
+ * *Unsupported Features* — and Cookies and Draft Mode are named in it outright. Suggesting either to
+ * a project that exports recommends a change the build then refuses, which is the opposite of what
+ * the *would apply* bucket promises: the README defines it as what adopting the API buys.
+ *
+ * Read through `readFlag` rather than `isConfigured`, because the value is the whole question:
+ * `output: 'standalone'` supports both functions, and only `'export'` removes them.
+ *
+ * Nothing is dismissed where the config could not be read. A reader that cannot see `output` cannot
+ * know the project exports, and dismissing an entry on a guess would hide an API that does apply —
+ * the one direction this must not err in. That makes the reader's coverage of config shapes the
+ * limit on this, which is why the two are measured together.
+ */
+function staticallyExported(context: PredicateContext): string | undefined {
+  const path = context.project.config?.path;
+  if (path === undefined) return undefined;
+  const value = readFlag(context.project.config, "output");
+  return value.status === "resolved" && value.value === "export" ? path : undefined;
+}
+
 const NOT_APPLICABLE: Readonly<Record<string, Predicate>> = {
+  "functions/cookies": (context): Verdict => {
+    const path = staticallyExported(context);
+    return path === undefined
+      ? NO_MATCH
+      : match(
+          [path],
+          "the project exports statically, and a static export serves no request to read cookies from",
+        );
+  },
+  "functions/draft-mode": (context): Verdict => {
+    const path = staticallyExported(context);
+    return path === undefined
+      ? NO_MATCH
+      : match(
+          [path],
+          "the project exports statically, and switching a request to uncached rendering needs a server",
+        );
+  },
   // The helper generates several sitemaps from one sitemap convention. With no convention there
   // is nothing to generate from, and the question does not arise.
   "functions/generate-sitemaps": (context): Verdict => {

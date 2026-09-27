@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { fileIn, fixtureContext } from "../../test-support/corpus.js";
 import type { BuildFiles } from "../../test-support/manifests.js";
 import { writeBuild } from "../../test-support/manifests.js";
+import { readNextConfig } from "../collect/config.js";
 import type { SurfaceEntry } from "../collect/docs.js";
 import { buildGraph } from "../collect/graph.js";
 import { EMPTY_JOIN, joinRoutes, readBuildOutput } from "../collect/output.js";
@@ -640,6 +641,61 @@ describe("generateSitemaps is ruled out with no sitemap to generate from", () =>
     const context = project({ "app/page.tsx": "export default () => null\n" });
     const verdict = dismiss(context);
     expect(verdict?.matched && verdict.evidence.length > 0).toBe(true);
+  });
+});
+
+describe("a static export rules out the functions it cannot serve", () => {
+  // `project` never parses a config, because almost nothing here needs one. These entries are the
+  // exception: the option's value is the whole question, so the config is read from the directory
+  // `project` has already written and put back into the context.
+  const exporting = (config?: string): PredicateContext => {
+    const files: Record<string, string> = { "app/page.tsx": "export default () => null\n" };
+    if (config !== undefined) files["next.config.ts"] = config;
+    const base = project(files);
+    return {
+      ...base,
+      project: { ...base.project, config: readNextConfig(base.project.root) },
+    };
+  };
+  const dismiss = (id: string, title: string, context: PredicateContext) =>
+    predicateFor(id).notApplicable?.(context, surface(id, title));
+
+  it("should dismiss cookies when the project exports statically", () => {
+    const context = exporting("export default { output: 'export' }\n");
+    const verdict = dismiss("functions/cookies", "cookies", context);
+    expect(verdict?.matched).toBe(true);
+    expect(verdict?.evidence).toEqual([context.project.config?.path]);
+    expect(verdict?.note).toContain("exports statically");
+  });
+
+  it("should dismiss draftMode when the project exports statically", () => {
+    const context = exporting("export default { output: 'export' }\n");
+    const verdict = dismiss("functions/draft-mode", "draftMode", context);
+    expect(verdict?.matched).toBe(true);
+    expect(verdict?.note).toContain("needs a server");
+  });
+
+  // The control. Without the option both functions apply, and the *would apply* bucket is where
+  // they belong — a dismissal that fires without reading `output: 'export'` hides a usable API.
+  it("should dismiss neither when there is no config to read", () => {
+    const context = exporting();
+    expect(dismiss("functions/cookies", "cookies", context)?.matched).toBe(false);
+    expect(dismiss("functions/draft-mode", "draftMode", context)?.matched).toBe(false);
+  });
+
+  it("should dismiss neither under an output that keeps a server", () => {
+    const context = exporting("export default { output: 'standalone' }\n");
+    expect(dismiss("functions/cookies", "cookies", context)?.matched).toBe(false);
+    expect(dismiss("functions/draft-mode", "draftMode", context)?.matched).toBe(false);
+  });
+
+  // A config the reader cannot resolve must not dismiss anything: it cannot know the project
+  // exports, and guessing would hide an API that does apply.
+  it("should dismiss neither when the config resists reading", () => {
+    const context = exporting("export default withPlugins([withA, withB], (c) => c);\n");
+    expect(context.project.config?.object.status).toBe("unresolved");
+    expect(dismiss("functions/cookies", "cookies", context)?.matched).toBe(false);
+    expect(dismiss("functions/draft-mode", "draftMode", context)?.matched).toBe(false);
   });
 });
 

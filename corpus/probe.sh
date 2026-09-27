@@ -111,15 +111,23 @@ install_package() {
     *) spec="$name@${declaration#^}" ;;
   esac
   spec="${spec/@~/@}"
-  tarball=$(cd "$WORK/packs" && npm pack "$spec" --silent 2>/dev/null | tail -1)
-  [ -z "$tarball" ] && return 1
-  # $$ in the directory name: two probes running in parallel otherwise overwrite each other's
-  # extraction and one of them unpacks a half-written tree.
-  extract="$WORK/packs/x.$$"
-  rm -rf "$extract"; mkdir -p "$extract"
-  tar -xzf "$WORK/packs/$tarball" -C "$extract" || { rm -rf "$extract"; return 1; }
+  # $$ in the directory name, and the tarball downloaded into it rather than into the shared
+  # `packs`: two probes asking for the same version write the same `<name>-<version>.tgz`, and the
+  # one that arrives second unpacks a half-written file and reports the package missing. It is the
+  # common case, not a rare one — the manifest is full of projects on the same Next release, and
+  # `run.sh` runs three at a time. Measured on a pass of seven entries, `jinruozai/HTML-Light-Demo`
+  # on `16.2.6` and `EmberlyOSS/Emberly` on `^16.2.6` collided and the first produced no report at
+  # all; alone it produces 139 entries. Nothing is lost by not sharing the directory, since npm's
+  # own cache is what keeps this off the network.
+  local dest="$WORK/packs/p.$$"
+  rm -rf "$dest"; mkdir -p "$dest"
+  tarball=$(cd "$dest" && npm pack "$spec" --silent 2>/dev/null | tail -1)
+  [ -z "$tarball" ] && { rm -rf "$dest"; return 1; }
+  extract="$dest/x"
+  mkdir -p "$extract"
+  tar -xzf "$dest/$tarball" -C "$extract" || { rm -rf "$dest"; return 1; }
   mkdir -p "$APP/node_modules"; rm -rf "$APP/node_modules/$name"
-  cp -R "$extract/package" "$APP/node_modules/$name"; rm -rf "$extract"
+  cp -R "$extract/package" "$APP/node_modules/$name"; rm -rf "$dest"
   return 0
 }
 

@@ -204,10 +204,8 @@ not-evaluated functions/cacheLife
 not-evaluated functions/cacheTag
 not-evaluated functions/catchError
 not-evaluated functions/connection
-would-apply functions/cookies
-  app/layout.tsx
-would-apply functions/draft-mode
-  app/layout.tsx
+not-applicable functions/cookies
+not-applicable functions/draft-mode
 not-evaluated functions/fetch
 not-evaluated functions/forbidden
 not-evaluated functions/generate-image-metadata

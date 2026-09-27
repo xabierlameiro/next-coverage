@@ -6,6 +6,13 @@ entry from the Conventional Commits merged to `main`. The project follows
 the JSON contract. `schemaVersion` in the JSON output moves whenever its shape does, and the entry
 says so.
 
+## [0.1.1](https://github.com/xabierlameiro/next-coverage/compare/v0.1.0...v0.1.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* read framework exports off a namespace or import(), and name what a run did not read ([#12](https://github.com/xabierlameiro/next-coverage/issues/12)) ([892d88d](https://github.com/xabierlameiro/next-coverage/commit/892d88de9aceb3c5385922f7aa719d66090e2335))
+
 ## 0.1.0 (2026-09-14)
 
 First public release.

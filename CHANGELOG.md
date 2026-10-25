@@ -6,6 +6,13 @@ entry from the Conventional Commits merged to `main`. The project follows
 the JSON contract. `schemaVersion` in the JSON output moves whenever its shape does, and the entry
 says so.
 
+## [0.1.2](https://github.com/xabierlameiro/next-coverage/compare/v0.1.1...v0.1.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* read the host of a font stylesheet link instead of searching the URL for it ([#22](https://github.com/xabierlameiro/next-coverage/issues/22)) ([2a66f9d](https://github.com/xabierlameiro/next-coverage/commit/2a66f9d0b33456ca2e5bf8d88515c822d291c5de))
+
 ## [0.1.1](https://github.com/xabierlameiro/next-coverage/compare/v0.1.0...v0.1.1) (2026-09-27)
 
 

@@ -147,10 +147,26 @@ function formWouldApply(context: PredicateContext): Suggestion {
   );
 }
 
+/**
+ * Whether a literal `href` points at Google's font stylesheet host. The host is read off the parsed
+ * URL rather than searched for as a substring: `/docs/fonts.googleapis.com` is a path and
+ * `https://other.example/?u=fonts.googleapis.com` is somebody else's server, and neither fetches a
+ * font at runtime. The base resolves a scheme-relative `//fonts.googleapis.com/css2` the way a
+ * browser would; a relative path resolves onto that placeholder host and is rejected by the
+ * comparison.
+ */
+function isGoogleFontStylesheet(href: string): boolean {
+  try {
+    return new URL(href, "https://relative.invalid").hostname === "fonts.googleapis.com";
+  } catch {
+    return false;
+  }
+}
+
 function fontWouldApply(context: PredicateContext): Suggestion {
   const remote = productionElements(context, "link").filter(({ element }) => {
     const href = attributeLiteral(element, "href");
-    return href?.includes("fonts.googleapis.com") === true;
+    return href !== undefined && isGoogleFontStylesheet(href);
   });
   return suggestion(
     filesOf(remote),

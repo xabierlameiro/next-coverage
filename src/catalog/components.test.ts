@@ -192,6 +192,25 @@ describe("font heuristics", () => {
     expect(applies("components/font", context)?.matched).toBe(true);
   });
 
+  it("should accept a scheme-relative stylesheet URL", () => {
+    const context = project({
+      "app/a.tsx":
+        "export const A = () => <link href='//fonts.googleapis.com/css2?family=Inter' />\n",
+    });
+    expect(applies("components/font", context)?.matched).toBe(true);
+  });
+
+  it("should read the host, not search for it anywhere in the URL", () => {
+    const context = project({
+      "app/a.tsx": "export const A = () => <link href='/docs/fonts.googleapis.com' />\n",
+      "app/b.tsx":
+        "export const B = () => <link href='https://other.example/?u=fonts.googleapis.com' />\n",
+      "app/c.tsx":
+        "export const C = () => <link href='https://fonts.googleapis.com.example/css2' />\n",
+    });
+    expect(applies("components/font", context)?.matched).toBe(false);
+  });
+
   it("should stay silent for a font stylesheet referenced only by a test", () => {
     const context = project({
       "app/a.test.tsx":

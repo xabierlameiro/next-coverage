@@ -3,7 +3,7 @@
   "private": true,
   "description": "A fixture that adopts the global-not-found convention. See README.md.",
   "dependencies": {
-    "next": "16.4.3",
+    "next": "16.4.5",
     "react": "19.2.0"
   }
 }

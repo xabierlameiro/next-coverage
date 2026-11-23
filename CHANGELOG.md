@@ -6,6 +6,13 @@ entry from the Conventional Commits merged to `main`. The project follows
 the JSON contract. `schemaVersion` in the JSON output moves whenever its shape does, and the entry
 says so.
 
+## [0.2.0](https://github.com/xabierlameiro/next-coverage/compare/v0.1.2...v0.2.0) (2026-11-23)
+
+
+### Features
+
+* detect navigation and prefetch from next/cache ([#31](https://github.com/xabierlameiro/next-coverage/issues/31)) ([b1ee0c1](https://github.com/xabierlameiro/next-coverage/commit/b1ee0c17d19ff876b17c550726c9c76c389db0cb))
+
 ## [0.1.2](https://github.com/xabierlameiro/next-coverage/compare/v0.1.1...v0.1.2) (2026-10-25)
 
 

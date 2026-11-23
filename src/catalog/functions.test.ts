@@ -117,6 +117,18 @@ describe("import-anchored detection", () => {
     expect(verdict.matched).toBe(true);
   });
 
+  it("should count the deferral functions only when they come from next/cache", () => {
+    for (const title of ["navigation", "prefetch"]) {
+      const id = `functions/${title}`;
+      const own = project({ "app/a.ts": `import { ${title} } from './defer'\n` });
+      expect(predicateFor(id).detectUsed(own, surface(id, title)).matched, id).toBe(false);
+      const framework = project({
+        "app/a.ts": `import { ${title} } from 'next/cache'\nexport async function A() { await ${title}() }\n`,
+      });
+      expect(predicateFor(id).detectUsed(framework, surface(id, title)).matched, id).toBe(true);
+    }
+  });
+
   it("should reject a type-only import as a use", () => {
     const context = project({ "app/a.ts": "import type { redirect } from 'next/navigation'\n" });
     const verdict = predicateFor("functions/redirect").detectUsed(
@@ -845,6 +857,15 @@ describe("a measured candidate is not a backlog", () => {
       expect(why, id).not.toBe("no condition written for reaching for this function");
       expect((why ?? "").length, id).toBeGreaterThan(30);
     }
+  });
+
+  it("should name the release a later entry was read against", () => {
+    for (const id of ["functions/navigation", "functions/prefetch"]) {
+      const reason = predicateFor(id).noSuggestion;
+      expect(reason?.kind, id).toBe("abstained");
+      expect(reason?.kind === "abstained" && reason.measuredAgainst, id).toBe("16.4.6");
+    }
+    expect(reasonFor("functions/use-offline")).toMatchObject({ measuredAgainst: "16.3.0" });
   });
 
   it("should keep the unwritten kind available for a condition that is genuinely pending", () => {

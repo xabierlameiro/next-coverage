@@ -976,6 +976,14 @@ const MEASURED_AND_DROPPED: Readonly<Record<string, string>> = {
     "the argument is a root parameter threaded through components that do not use it, and following a prop from where it is read to where it was declared is a chain of files rather than one",
   "functions/use-offline":
     "whether an application should render differently with no connection is a product decision, and no shape in a component says it wants one",
+  // Both defer a subtree out of the App Shell, and `navigation` out of per-link prefetches too. The
+  // documentation's argument is cost: content expensive to produce that no prefetch should
+  // generate. What a subtree costs is not in its source, and an `await` placed to defer it reads
+  // the same as one placed for any other reason.
+  "functions/navigation":
+    "deferring a subtree until the user navigates is argued by what it costs to produce, and no shape in a component states that cost",
+  "functions/prefetch":
+    "keeping a subtree out of the App Shell is argued by what it costs to produce, and no shape in a component states that cost",
   // Both interrupt a render to mount `forbidden.tsx` or `unauthorized.tsx`. A route handler
   // answering by hand is doing the right thing — there is no UI to mount — so the shape would have
   // to be found inside a render, and inside a render it is an ordinary branch.
@@ -1047,13 +1055,23 @@ export function reopenedFrom(id: string): ReopenedFrom {
   return { from: id, why };
 }
 
+/**
+ * The release an abstention was read against, where it is not the one the survey ran on. An entry
+ * a later release introduced cannot have been read against an earlier one, and the sentence names
+ * the release because it is a claim about what that page states.
+ */
+const MEASURED_LATER: Readonly<Record<string, string>> = {
+  "functions/navigation": "16.4.6",
+  "functions/prefetch": "16.4.6",
+};
+
 export function reasonFor(id: string): NoSuggestion {
   const delegate = DELEGATES_TO[id];
   if (delegate !== undefined) return { kind: "delegated", to: delegate, measuredAgainst: "16.3.0" };
   const measured = MEASURED_AND_DROPPED[id];
   return measured === undefined
     ? { kind: "unwritten", why: "no condition written for reaching for this function" }
-    : { kind: "abstained", why: measured, measuredAgainst: "16.3.0" };
+    : { kind: "abstained", why: measured, measuredAgainst: MEASURED_LATER[id] ?? "16.3.0" };
 }
 
 /**

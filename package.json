@@ -1,6 +1,6 @@
 {
   "name": "next-coverage",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "API surface coverage report for Next.js App Router projects: what you use, what would apply, what does not.",
   "keywords": [
     "nextjs",

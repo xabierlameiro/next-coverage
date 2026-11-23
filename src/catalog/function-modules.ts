@@ -30,6 +30,8 @@ export const FUNCTION_SHAPES: Readonly<Record<string, DetectionShape>> = {
   "functions/cacheLife": importedFrom("next/cache"),
   "functions/cacheTag": importedFrom("next/cache"),
   "functions/io": importedFrom("next/cache"),
+  "functions/navigation": importedFrom("next/cache"),
+  "functions/prefetch": importedFrom("next/cache"),
   "functions/refresh": importedFrom("next/cache"),
   "functions/revalidatePath": importedFrom("next/cache"),
   "functions/revalidateTag": importedFrom("next/cache"),
